@@ -126,14 +126,14 @@ void android_server_PowerManagerService_wakeUp(nsecs_t eventTime) {
 }
 
 void android_server_PowerManagerService_goToSleep(nsecs_t eventTime) {
-    if (gPowerManagerServiceObj) {
+    /*if (gPowerManagerServiceObj) {
         JNIEnv* env = AndroidRuntime::getJNIEnv();
 
         env->CallVoidMethod(gPowerManagerServiceObj,
                 gPowerManagerServiceClassInfo.goToSleepFromNative,
                 nanoseconds_to_milliseconds(eventTime), 0);
         checkAndClearExceptionFromCallback(env, "goToSleepFromNative");
-    }
+    }*/
 }
 
 // ----------------------------------------------------------------------------
@@ -169,13 +169,14 @@ static void nativeReleaseSuspendBlocker(JNIEnv *env, jclass clazz, jstring nameS
 
 static void nativeSetInteractive(JNIEnv *env, jclass clazz, jboolean enable) {
     if (gPowerModule) {
-        if (enable) {
+    	gPowerModule->setInteractive(gPowerModule, true);
+    	/*if (enable) {
             ALOGD_IF_SLOW(20, "Excessive delay in setInteractive(true) while turning screen on");
             gPowerModule->setInteractive(gPowerModule, true);
         } else {
             ALOGD_IF_SLOW(20, "Excessive delay in setInteractive(false) while turning screen off");
             gPowerModule->setInteractive(gPowerModule, false);
-        }
+        }*/
     }
 }
 

@@ -4244,6 +4244,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 result |= ACTION_WAKE_UP;
             }
         }
+
         return result;
     }
 

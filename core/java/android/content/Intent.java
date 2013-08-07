@@ -597,6 +597,18 @@ import java.util.Set;
 public class Intent implements Parcelable, Cloneable {
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
+    // CraveOS intents
+	
+	public static final String CRAVEOS_ACTION_SET_BACKLIGHT = "android.crave.intent.SET_BACKLIGHT";
+	public static final String CRAVEOS_ACTION_REBOOT = "android.crave.intent.REBOOT";
+	public static final String CRAVEOS_ACTION_SHUTDOWN = "android.crave.intent.SHUTDOWN";
+	public static final String CRAVEOS_ACTION_STATUSBAR_SHOW = "com.samsung.kiosk.StatusBarVisible";
+	public static final String CRAVEOS_ACTION_STATUSBAR_HIDE = "com.samsung.kiosk.StatusBarInvisible";
+	public static final String CRAVEOS_ACTION_KIOSKMODE_START = "com.samsung.kiosk.START_KIOSK_MODE";
+	public static final String CRAVEOS_ACTION_KIOSKMODE_STOP = "com.samsung.kiosk.STOP_KIOSK_MODE";
+	
+    // ---------------------------------------------------------------------
+    // ---------------------------------------------------------------------
     // Standard intent activity actions (see action variable).
 
     /**

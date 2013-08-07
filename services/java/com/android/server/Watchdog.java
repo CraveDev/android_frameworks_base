@@ -29,12 +29,15 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Debug;
 import android.os.Handler;
+import android.os.IPowerManager;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
+import android.provider.Settings;
 import android.util.EventLog;
 import android.util.Log;
 import android.util.Slog;
@@ -82,6 +85,7 @@ public class Watchdog extends Thread {
     /* This handler will be used to post message back onto the main thread */
     final Handler mHandler;
     final ArrayList<Monitor> mMonitors = new ArrayList<Monitor>();
+    Context mContext;
     ContentResolver mResolver;
     BatteryService mBattery;
     PowerManagerService mPower;
@@ -173,6 +177,19 @@ public class Watchdog extends Thread {
             checkReboot(true);
         }
     }
+    
+    final class CraveIntentReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			if (action.equals(Intent.CRAVEOS_ACTION_SET_BACKLIGHT)) {
+				setBacklight(intent);
+			}
+			else {
+				Slog.w(TAG, "CraveOS - Received unknown intent: " + action);
+			}
+		}
+    }
 
     public interface Monitor {
         void monitor();
@@ -196,6 +213,7 @@ public class Watchdog extends Thread {
     public void init(Context context, BatteryService battery,
             PowerManagerService power, AlarmManagerService alarm,
             ActivityManagerService activity) {
+    	mContext = context;
         mResolver = context.getContentResolver();
         mBattery = battery;
         mPower = power;
@@ -210,6 +228,10 @@ public class Watchdog extends Thread {
         context.registerReceiver(new RebootRequestReceiver(),
                 new IntentFilter(Intent.ACTION_REBOOT),
                 android.Manifest.permission.REBOOT, null);
+        
+        IntentFilter craveIntentFilter = new IntentFilter();
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_BACKLIGHT);
+        context.registerReceiver(new CraveIntentReceiver(), craveIntentFilter);
 
         mBootTime = System.currentTimeMillis();
     }
@@ -354,6 +376,34 @@ public class Watchdog extends Thread {
         }
 
         return null;
+    }
+    
+    void setBacklight(Intent intent) {
+    	if (intent.hasExtra("brightness")) {
+    		int brightness = 255;
+    		String brightnessStr = intent.getStringExtra("brightness");
+    		if (brightnessStr == null) {
+    			brightness = intent.getIntExtra("brightness", 100);
+    		} else {
+    			try {
+    				brightness = Integer.parseInt(brightnessStr);
+    			} catch(NumberFormatException ex) {
+    				Slog.e(TAG, "Failed to parse backlight brightness: " + brightnessStr);
+    			}
+    		}
+    		            
+            try {
+                IPowerManager power = IPowerManager.Stub.asInterface(ServiceManager.getService("power"));
+                if (power != null) {
+                    power.setTemporaryScreenBrightnessSettingOverride(brightness);
+                }
+
+                Settings.System.putInt(mResolver, Settings.System.SCREEN_BRIGHTNESS, brightness);
+            } catch (RemoteException doe) {
+            }
+    	} else {
+    		Slog.w(TAG, "setBacklight, missing brightness extra");
+    	}
     }
 
     static long computeCalendarTime(Calendar c, long curTime,

@@ -382,6 +382,7 @@ final class DisplayPowerController {
         mScreenBrightnessDimConfig = clampAbsoluteBrightness(resources.getInteger(
                 com.android.internal.R.integer.config_screenBrightnessDim));
 
+        // CraveOS - Changed config value, minimum brightness is now 0
         int screenBrightnessMinimum = Math.min(resources.getInteger(
                 com.android.internal.R.integer.config_screenBrightnessSettingMinimum),
                 mScreenBrightnessDimConfig);
@@ -389,8 +390,7 @@ final class DisplayPowerController {
         mScreenBrightnessRangeMinimum = clampAbsoluteBrightness(screenBrightnessMinimum);
         mScreenBrightnessRangeMaximum = PowerManager.BRIGHTNESS_ON;
 
-        mUseSoftwareAutoBrightnessConfig = resources.getBoolean(
-                com.android.internal.R.bool.config_automatic_brightness_available);
+        mUseSoftwareAutoBrightnessConfig = false; //resources.getBoolean(com.android.internal.R.bool.config_automatic_brightness_available);
 
         if (mUseSoftwareAutoBrightnessConfig) {
             final ContentResolver cr = mContext.getContentResolver();
@@ -689,6 +689,8 @@ final class DisplayPowerController {
                         && mProximity == PROXIMITY_POSITIVE) {
                     mScreenOffBecauseOfProximity = true;
                     sendOnProximityPositive();
+                    
+                    Slog.d(TAG, "Screen off using proximity sensor");
                     setScreenOn(false);
                 }
             } else if (mWaitingForNegativeProximity
@@ -792,6 +794,7 @@ final class DisplayPowerController {
                 if (!mElectronBeamOnAnimator.isStarted()) {
                     if (!mElectronBeamOffAnimator.isStarted()) {
                         if (mPowerState.getElectronBeamLevel() == 0.0f) {
+                        	Slog.d(TAG, "Screen off without proximity sensor");
                             setScreenOn(false);
                         } else if (mPowerState.prepareElectronBeam(
                                 mElectronBeamFadesConfig ?
@@ -1452,12 +1455,12 @@ final class DisplayPowerController {
         @Override
         public void onTwilightStateChanged() {
             mTwilightChanged = true;
-            updatePowerState();
+            //updatePowerState();
         }
     };
 
     private boolean useScreenOffAnimation() {
-        return Settings.System.getInt(mContext.getContentResolver(),
-                Settings.System.SCREEN_OFF_ANIMATION, 1) == 1;
+    	// CraveOS - No animation
+    	return false; //Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_OFF_ANIMATION, 1) == 1;
     }
 }

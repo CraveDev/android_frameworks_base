@@ -22,7 +22,7 @@
 #define DEBUG_INPUT_READER_POLICY 0
 
 // Log debug messages about InputDispatcherPolicy
-#define DEBUG_INPUT_DISPATCHER_POLICY 0
+#define DEBUG_INPUT_DISPATCHER_POLICY 1
 
 
 #include "JNIHelp.h"
@@ -850,15 +850,16 @@ void NativeInputManager::interceptMotionBeforeQueueing(nsecs_t when, uint32_t& p
                 policyFlags |= POLICY_FLAG_BRIGHT_HERE;
             }
         } else {
-            JNIEnv* env = jniEnv();
+            /*JNIEnv* env = jniEnv();
             jint wmActions = env->CallIntMethod(mServiceObj,
                         gServiceClassInfo.interceptMotionBeforeQueueingWhenScreenOff,
                         policyFlags);
             if (checkAndClearExceptionFromCallback(env,
                     "interceptMotionBeforeQueueingWhenScreenOff")) {
                 wmActions = 0;
-            }
+            }*/
 
+        	jint wmActions = WM_ACTION_WAKE_UP;
             policyFlags |= POLICY_FLAG_WOKE_HERE | POLICY_FLAG_BRIGHT_HERE;
             handleInterceptActions(wmActions, when, /*byref*/ policyFlags);
         }

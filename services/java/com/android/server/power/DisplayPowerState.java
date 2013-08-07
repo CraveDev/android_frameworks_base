@@ -344,7 +344,8 @@ final class DisplayPowerState {
                 if (on != mPendingOn || backlight != mPendingBacklight) {
                     if (DEBUG) {
                         Slog.d(TAG, "Requesting new screen state: on=" + on
-                                + ", backlight=" + backlight);
+                                + ", backlight=" + backlight
+                                + ", mChangeInProgress=" + mChangeInProgress);
                     }
 
                     mPendingOn = on;
@@ -393,15 +394,23 @@ final class DisplayPowerState {
 
                     if (DEBUG) {
                         Slog.d(TAG, "Updating screen state: on=" + on
+                        		+ ", onChanged=" + onChanged
+                        		+ ", backlightChanged=" + backlightChanged
                                 + ", backlight=" + backlight);
                     }
                     if (onChanged && on) {
+                    	if (DEBUG) {
+                            Slog.d(TAG, "unblankAllDisplays");
+                        }
                         mDisplayBlanker.unblankAllDisplays();
                     }
                     if (backlightChanged) {
                         mBacklight.setBrightness(backlight);
                     }
                     if (onChanged && !on) {
+                    	if (DEBUG) {
+                            Slog.d(TAG, "blankAllDisplays");
+                        }
                         mDisplayBlanker.blankAllDisplays();
                     }
                 }
