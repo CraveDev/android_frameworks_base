@@ -11447,11 +11447,10 @@ public final class ActivityManagerService extends ActivityManagerNative
                             + " (pid=" + Binder.getCallingPid()
                             + ") when registering receiver " + receiver);
                 }
-                if (callerApp.info.uid != Process.SYSTEM_UID &&
-                        !callerApp.pkgList.contains(callerPackage)) {
-                    throw new SecurityException("Given caller package " + callerPackage
-                            + " is not running in process " + callerApp);
-                }
+
+                // -----------
+                // CraveOS - Removed security check, we don't care in which process the app is running
+
                 callingUid = callerApp.info.uid;
                 callingPid = callerApp.pid;
             } else {
