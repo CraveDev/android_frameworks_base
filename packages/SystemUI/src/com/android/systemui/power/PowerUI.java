@@ -162,13 +162,18 @@ public class PowerUI extends SystemUI {
             }
         }
     };
-
-    void dismissLowBatteryWarning() {       
+    
+    void sendBatteryOkIntent() {
     	Intent intent = new Intent(Intent.CRAVEOS_ACTION_BATTERY_OK);
         intent.putExtra(Intent.CRAVEOS_EXTRA_BATTERY_LEVEL, mBatteryLevel);
         mContext.sendBroadcast(intent);
-        
-        mIntentSendBatteryLow = false;
+    }
+
+    void dismissLowBatteryWarning() {       
+    	if (mIntentSendBatteryLow) {
+    		sendBatteryOkIntent();
+    	}
+    	mIntentSendBatteryLow = false;
     }
 
     void showLowBatteryWarning() {
@@ -187,11 +192,10 @@ public class PowerUI extends SystemUI {
     }
 
     void dismissInvalidChargerDialog() {
-    	Intent intent = new Intent(Intent.CRAVEOS_ACTION_BATTERY_OK);
-        intent.putExtra(Intent.CRAVEOS_EXTRA_BATTERY_LEVEL, mBatteryLevel);
-        mContext.sendBroadcast(intent);
-        
-        mIntentSendInvalidCharger = false;
+    	if (mIntentSendInvalidCharger) {
+    		sendBatteryOkIntent();
+    	}
+    	mIntentSendInvalidCharger = false;
     }
 
     void showInvalidChargerDialog() {
