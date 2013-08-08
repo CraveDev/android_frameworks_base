@@ -3440,27 +3440,9 @@ public class PackageManagerService extends IPackageManager.Stub {
 
     private boolean verifySignaturesLP(PackageSetting pkgSetting,
             PackageParser.Package pkg) {
-        if (pkgSetting.signatures.mSignatures != null) {
-            // Already existing package. Make sure signatures match
-            if (compareSignatures(pkgSetting.signatures.mSignatures, pkg.mSignatures) !=
-                PackageManager.SIGNATURE_MATCH) {
-                    Slog.e(TAG, "Package " + pkg.packageName
-                            + " signatures do not match the previously installed version; ignoring!");
-                    mLastScanError = PackageManager.INSTALL_FAILED_UPDATE_INCOMPATIBLE;
-                    return false;
-                }
-        }
-        // Check for shared user signatures
-        if (pkgSetting.sharedUser != null && pkgSetting.sharedUser.signatures.mSignatures != null) {
-            if (compareSignatures(pkgSetting.sharedUser.signatures.mSignatures,
-                    pkg.mSignatures) != PackageManager.SIGNATURE_MATCH) {
-                Slog.e(TAG, "Package " + pkg.packageName
-                        + " has no signatures that match those in shared user "
-                        + pkgSetting.sharedUser.name + "; ignoring!");
-                mLastScanError = PackageManager.INSTALL_FAILED_SHARED_USER_INCOMPATIBLE;
-                return false;
-            }
-        }
+    	// ---------
+    	// CraveOS - Removed security check. Don't check for shared user signatures
+    	
         return true;
     }
 
