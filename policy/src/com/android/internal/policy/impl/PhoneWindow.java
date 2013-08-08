@@ -285,13 +285,19 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         if ((features != DEFAULT_FEATURES) && (featureId == FEATURE_CUSTOM_TITLE)) {
 
             /* Another feature is enabled and the user is trying to enable the custom title feature */
-            throw new AndroidRuntimeException("You cannot combine custom titles with other title features");
+        	// ----------
+        	// CraveOS - Unknown why this is needed, but we must have done it for a reason
+            // throw new AndroidRuntimeException("You cannot combine custom titles with other title features");
+        	return false;
         }
         if (((features & (1 << FEATURE_CUSTOM_TITLE)) != 0) &&
                 (featureId != FEATURE_CUSTOM_TITLE) && (featureId != FEATURE_ACTION_MODE_OVERLAY)) {
 
             /* Custom title feature is enabled and the user is trying to enable another feature */
-            throw new AndroidRuntimeException("You cannot combine custom titles with other title features");
+        	// ----------
+        	// CraveOS - Unknown why this is needed, but we must have done it for a reason        	
+            // throw new AndroidRuntimeException("You cannot combine custom titles with other title features");
+        	return false;
         }
         if ((features & (1 << FEATURE_NO_TITLE)) != 0 && featureId == FEATURE_ACTION_BAR) {
             return false; // Ignore. No title dominates.
