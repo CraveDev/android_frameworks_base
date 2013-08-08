@@ -865,6 +865,9 @@ public class PhoneStatusBar extends BaseStatusBar {
     }
 
     public int getStatusBarHeight() {
+    	if (mIsHidden)
+    		return 0;
+    	
         if (mNaturalBarHeight < 0) {
             final Resources res = mContext.getResources();
             mNaturalBarHeight =
@@ -958,7 +961,8 @@ public class PhoneStatusBar extends BaseStatusBar {
 
     private WindowManager.LayoutParams getNavigationBarLayoutParams() {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT, 
+                (mIsHidden ? 0 : LayoutParams.MATCH_PARENT),
                 WindowManager.LayoutParams.TYPE_NAVIGATION_BAR,
                     0
                     | WindowManager.LayoutParams.FLAG_TOUCHABLE_WHEN_WAKING
@@ -3017,5 +3021,19 @@ public class PhoneStatusBar extends BaseStatusBar {
                     false, this, UserHandle.USER_ALL);
         }
     }
-
+    
+    @Override
+    public void showHideStatusBar(boolean hide) {
+    	super.showHideStatusBar(hide);
+    	
+    	if (mNavigationBarView != null) {
+    		if (hide) {
+    			mNavigationBarView.setVisibility(View.GONE);
+    			mWindowManager.removeView(mNavigationBarView);
+    		} else {
+    			mWindowManager.addView(mNavigationBarView, getNavigationBarLayoutParams());
+    			mNavigationBarView.setVisibility(View.VISIBLE);
+    		}
+    	}
+    }
 }

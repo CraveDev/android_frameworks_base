@@ -129,6 +129,8 @@ public abstract class BaseStatusBar extends SystemUI implements
     protected int mCurrentUserId = 0;
 
     protected FrameLayout mStatusBarContainer;
+    
+    protected boolean mIsHidden = false;
 
     /**
      * An interface for navigation key bars to allow status bars to signal which keys are
@@ -166,6 +168,14 @@ public abstract class BaseStatusBar extends SystemUI implements
      * and add them to the window manager.
      */
     protected abstract void createAndAddWindows();
+    
+    public void showHideStatusBar(boolean hide) {
+    	mIsHidden = hide;
+    	if (hide)
+    		mStatusBarContainer.setVisibility(View.GONE);
+    	else
+    		mStatusBarContainer.setVisibility(View.VISIBLE);
+    }
 
     protected WindowManager mWindowManager;
     protected IWindowManager mWindowManagerService;
@@ -320,6 +330,24 @@ public abstract class BaseStatusBar extends SystemUI implements
                     }
                 }
             }
+        }, filter);
+        
+        // ----------
+        // CraveOS intents for show/hide StatusBar
+        filter = new IntentFilter();
+        filter.addAction(Intent.CRAVEOS_ACTION_STATUSBAR_HIDE);
+        filter.addAction(Intent.CRAVEOS_ACTION_STATUSBAR_SHOW);
+        mContext.registerReceiver(new BroadcastReceiver() {
+        	@Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                Slog.v(TAG, "Received intent: " + action);
+                if (action.equals(Intent.CRAVEOS_ACTION_STATUSBAR_SHOW)) {
+                	showHideStatusBar(false);
+                } else {
+                	showHideStatusBar(true);
+                }
+        	}
         }, filter);
     }
 
