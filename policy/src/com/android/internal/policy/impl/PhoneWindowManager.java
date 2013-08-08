@@ -200,6 +200,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     static final int LONG_PRESS_POWER_GLOBAL_ACTIONS = 1;
     static final int LONG_PRESS_POWER_SHUT_OFF = 2;
     static final int LONG_PRESS_POWER_SHUT_OFF_NO_CONFIRM = 3;
+    static final int LONG_PRESS_POWER_CRAVE_INTENT = 4;
 
     // These need to match the documentation/constant in
     // core/res/res/values/config.xml
@@ -902,6 +903,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 sendCloseSystemWindows(SYSTEM_DIALOG_REASON_GLOBAL_ACTIONS);
                 mWindowManagerFuncs.shutdown(resolvedBehavior == LONG_PRESS_POWER_SHUT_OFF);
                 break;
+            case LONG_PRESS_POWER_CRAVE_INTENT:
+            	mPowerKeyHandled = true;
+            	mContext.sendBroadcast(new Intent(Intent.CRAVEOS_ACTION_POWER_LONG_PRESS));
+            	break;
             }
         }
     };
@@ -1184,6 +1189,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         // register for multiuser-relevant broadcasts
         filter = new IntentFilter(Intent.ACTION_USER_SWITCHED);
         context.registerReceiver(mMultiuserReceiver, filter);
+        
+        // register for crave kiosk mode broadcasts
+        filter = new IntentFilter();
+        filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_START);
+        filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP);
+        context.registerReceiver(mCraveKioskModeReceiver, filter);
 
         mVibrator = (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
         // register for WIFI Display intents
@@ -5274,6 +5285,19 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     public void showAssistant() {
         mKeyguardMediator.showAssistant();
     }
+    
+    BroadcastReceiver mCraveKioskModeReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			Slog.i(TAG, "CraveKioskModeReceiver: " + action);
+			if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_START)) {
+				mLongPressOnPowerBehavior = LONG_PRESS_POWER_CRAVE_INTENT;
+			} else if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP)) {
+				mLongPressOnPowerBehavior = LONG_PRESS_POWER_GLOBAL_ACTIONS;
+			}
+		}
+    };
 
     @Override
     public void dump(String prefix, PrintWriter pw, String[] args) {
