@@ -607,6 +607,14 @@ public class Intent implements Parcelable, Cloneable {
 	public static final String CRAVEOS_ACTION_KIOSKMODE_START = "com.samsung.kiosk.START_KIOSK_MODE";
 	public static final String CRAVEOS_ACTION_KIOSKMODE_STOP = "com.samsung.kiosk.STOP_KIOSK_MODE";
 	
+	public static final String CRAVEOS_ACTION_BATTERY_LOW = "android.crave.intent.BATTERY_LOW";
+	public static final String CRAVEOS_ACTION_INVALID_CHARGER = "android.crave.intent.INVALID_CHARGER";
+	public static final String CRAVEOS_ACTION_BATTERY_OK = "android.crave.intent.BATTERY_OK";
+	public static final String CRAVEOS_EXTRA_BATTERY_LEVEL = "android.crave.intent.extra.BATTERY_LEVEL";
+	
+	public static final String CRAVEOS_ACTION_POWER_SHORT_PRESS = "android.crave.intent.POWER_SHORT_PRESS";
+	public static final String CRAVEOS_ACTION_POWER_LONG_PRESS = "android.crave.intent.POWER_LONG_PRESS";
+	
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
     // Standard intent activity actions (see action variable).
