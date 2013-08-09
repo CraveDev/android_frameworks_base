@@ -607,6 +607,12 @@ public class Intent implements Parcelable, Cloneable {
 	public static final String CRAVEOS_ACTION_KIOSKMODE_START = "com.samsung.kiosk.START_KIOSK_MODE";
 	public static final String CRAVEOS_ACTION_KIOSKMODE_STOP = "com.samsung.kiosk.STOP_KIOSK_MODE";
 	
+	public static final String CRAVEOS_ACTION_INSTALL_APK = "com.samsung.kiosk.InstallPackage";
+	public static final String CRAVEOS_EXTRA_PACKAGE_PATH = "com.samsung.kiosk.PackagePath";
+	public static final String CRAVEOS_ACTION_INSTALL_APK_RESULT = "com.samsung.kiosk.InstallPackageResult";
+	public static final String CRAVEOS_EXTRA_INSTALL_APK_RETURN_CODE = "returnCode";
+	public static final String CRAVEOS_EXTRA_INSTALL_APK_PACKAGE_NAME = "packageName";
+	
 	public static final String CRAVEOS_ACTION_BATTERY_LOW = "android.crave.intent.BATTERY_LOW";
 	public static final String CRAVEOS_ACTION_INVALID_CHARGER = "android.crave.intent.INVALID_CHARGER";
 	public static final String CRAVEOS_ACTION_BATTERY_OK = "android.crave.intent.BATTERY_OK";

@@ -26,9 +26,13 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.IPackageInstallObserver;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Debug;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.IPowerManager;
 import android.os.Looper;
 import android.os.Message;
@@ -37,6 +41,7 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
+import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.EventLog;
 import android.util.Log;
@@ -184,10 +189,49 @@ public class Watchdog extends Thread {
 			String action = intent.getAction();
 			if (action.equals(Intent.CRAVEOS_ACTION_SET_BACKLIGHT)) {
 				setBacklight(intent);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_REBOOT)) {
+				PowerManagerService pms = (PowerManagerService)ServiceManager.getService("power");
+				pms.reboot(false, "CraveOS reboot initiated", false);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_SHUTDOWN)) {
+				PowerManagerService pms = (PowerManagerService)ServiceManager.getService("power");
+				pms.shutdown(false, false);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_INSTALL_APK)) {
+				if (!intent.hasExtra(Intent.CRAVEOS_EXTRA_PACKAGE_PATH)) {
+					Slog.w(TAG, "Install APK: Missing PackagePath extra");
+					return;
+				}
+				
+				String fileStr = intent.getStringExtra(Intent.CRAVEOS_EXTRA_PACKAGE_PATH);
+				Slog.v(TAG, "Install APK: " + fileStr);
+				
+				PackageManager pm = mContext.getPackageManager();
+		        pm.installPackage(Uri.fromFile(new File(fileStr)), 
+		        		new CraveInstallPackageObserver(), 
+		        		PackageManager.INSTALL_REPLACE_EXISTING | PackageManager.INSTALL_FROM_ADB, 
+		        		null);
 			}
 			else {
 				Slog.w(TAG, "CraveOS - Received unknown intent: " + action);
 			}
+		}
+    }
+    
+    final class CraveInstallPackageObserver implements IPackageInstallObserver {
+		@Override
+		public IBinder asBinder() {
+			Slog.d(TAG, "CraveInstallerPackageObserver - asBinder called!");
+			return null;
+		}
+
+		@Override
+		public void packageInstalled(String packageName, int returnCode)
+				throws RemoteException {
+			Slog.i(TAG, "CraveInstallerPackageObserver - Install APK finished: packageName = " + packageName + ", returnCode = " + returnCode);
+			
+			Intent intent = new Intent(Intent.CRAVEOS_ACTION_INSTALL_APK_RESULT);
+			intent.putExtra(Intent.CRAVEOS_EXTRA_INSTALL_APK_RETURN_CODE, returnCode);
+			intent.putExtra(Intent.CRAVEOS_EXTRA_INSTALL_APK_PACKAGE_NAME, packageName);
+			mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
 		}
     }
 
@@ -231,6 +275,9 @@ public class Watchdog extends Thread {
         
         IntentFilter craveIntentFilter = new IntentFilter();
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_BACKLIGHT);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_REBOOT);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SHUTDOWN);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_INSTALL_APK);
         context.registerReceiver(new CraveIntentReceiver(), craveIntentFilter);
 
         mBootTime = System.currentTimeMillis();
