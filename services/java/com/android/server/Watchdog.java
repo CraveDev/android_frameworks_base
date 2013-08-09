@@ -209,6 +209,16 @@ public class Watchdog extends Thread {
 		        		new CraveInstallPackageObserver(), 
 		        		PackageManager.INSTALL_REPLACE_EXISTING | PackageManager.INSTALL_FROM_ADB, 
 		        		null);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_SET_DATETIME)) {
+				setDeviceDateTime(intent);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_ENABLE)) {
+				toggleAdb(true);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_DISABLE)) {
+				toggleAdb(false);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_WIFI_ENABLE)) {
+				toggleAdbWifi(true);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_WIFI_DISABLE)) {
+				toggleAdbWifi(false);
 			}
 			else {
 				Slog.w(TAG, "CraveOS - Received unknown intent: " + action);
@@ -278,6 +288,11 @@ public class Watchdog extends Thread {
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_REBOOT);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SHUTDOWN);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_INSTALL_APK);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_DATETIME);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_ENABLE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_DISABLE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_WIFI_ENABLE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_WIFI_DISABLE);
         context.registerReceiver(new CraveIntentReceiver(), craveIntentFilter);
 
         mBootTime = System.currentTimeMillis();
@@ -451,6 +466,62 @@ public class Watchdog extends Thread {
     	} else {
     		Slog.w(TAG, "setBacklight, missing brightness extra");
     	}
+    }
+    
+    void setDeviceDateTime(Intent intent) {
+    	final AlarmManager alarm = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+    	boolean isTimeChanged = false;
+        
+        Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.AUTO_TIME, 0);
+        Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.AUTO_TIME_ZONE, 0);
+        
+        // Set timezone
+        if (intent.hasExtra(Intent.CRAVEOS_EXTRA_DATETIME_TIMEZONEID)) {
+	        String timeZoneId = intent.getStringExtra(Intent.CRAVEOS_EXTRA_DATETIME_TIMEZONEID);
+	        if (timeZoneId != null) {
+	            alarm.setTimeZone(timeZoneId);
+	           
+	            isTimeChanged = true;
+	        }
+        }
+        
+        // Set 24Hour
+        if (intent.hasExtra(Intent.CRAVEOS_EXTRA_DATETIME_24HOUR)) {
+        	boolean is24Hour = intent.getBooleanExtra(Intent.CRAVEOS_EXTRA_DATETIME_24HOUR, true);
+        	Settings.System.putString(mContext.getContentResolver(), Settings.System.TIME_12_24, is24Hour? "24" : "12");
+        	
+        	isTimeChanged = true;
+        }
+        
+    	// Set date/time
+        if (intent.hasExtra(Intent.CRAVEOS_EXTRA_DATETIME_TIMESTAMP)) {
+	        long timeStamp = intent.getLongExtra(Intent.CRAVEOS_EXTRA_DATETIME_TIMESTAMP, -1);
+	        if (timeStamp > 0) {
+	            Calendar c = Calendar.getInstance();
+	            c.setTimeInMillis(timeStamp);
+	
+	            Slog.i(TAG, "setDeviceTime - Hour = " + c.get(Calendar.HOUR) + ", Minutes = " + c.get(Calendar.MINUTE));
+	            alarm.setTime(timeStamp);
+	            
+	            isTimeChanged = true;
+	        }
+        }
+
+        // Send intent
+        if (isTimeChanged) {
+        	Intent timeChanged = new Intent(Intent.ACTION_TIME_CHANGED);
+        	mContext.sendBroadcastAsUser(timeChanged, UserHandle.ALL);
+        }
+    }    
+    
+    void toggleAdb(boolean enabled) {
+    	Slog.i(TAG, "toggleAdb, enabled = " + enabled);
+    	Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.ADB_ENABLED, (enabled) ? 1 : 0);
+    }
+    
+    void toggleAdbWifi(boolean enabled) {
+    	Slog.i(TAG, "toggleAdbWifi, enabled = " + enabled);
+    	Settings.Secure.putInt(mContext.getContentResolver(), Settings.Secure.ADB_PORT, (enabled) ? 5555 : -1);
     }
 
     static long computeCalendarTime(Calendar c, long curTime,

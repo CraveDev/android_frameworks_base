@@ -607,6 +607,16 @@ public class Intent implements Parcelable, Cloneable {
 	public static final String CRAVEOS_ACTION_KIOSKMODE_START = "com.samsung.kiosk.START_KIOSK_MODE";
 	public static final String CRAVEOS_ACTION_KIOSKMODE_STOP = "com.samsung.kiosk.STOP_KIOSK_MODE";
 	
+	public static final String CRAVEOS_ACTION_SET_DATETIME = "com.samsung.kiosk.SET_TIME";
+	public static final String CRAVEOS_EXTRA_DATETIME_TIMESTAMP = "com.samsung.kiosk.timeMillis";
+	public static final String CRAVEOS_EXTRA_DATETIME_TIMEZONEID = "com.samsung.kiosk.timeZoneId";
+	public static final String CRAVEOS_EXTRA_DATETIME_24HOUR = "com.samsung.kiosk.is24Hour";
+	
+	public static final String CRAVEOS_ACTION_ADB_ENABLE = "com.samsung.kiosk.ENABLE_ADB";
+	public static final String CRAVEOS_ACTION_ADB_DISABLE = "com.samsung.kiosk.DISABLE_ADB";
+	public static final String CRAVEOS_ACTION_ADB_WIFI_ENABLE = "com.samsung.kiosk.ENABLE_ADB_WIFI";
+	public static final String CRAVEOS_ACTION_ADB_WIFI_DISABLE = "com.samsung.kiosk.DISABLE_ADB_WIFI";
+	
 	public static final String CRAVEOS_ACTION_INSTALL_APK = "com.samsung.kiosk.InstallPackage";
 	public static final String CRAVEOS_EXTRA_PACKAGE_PATH = "com.samsung.kiosk.PackagePath";
 	public static final String CRAVEOS_ACTION_INSTALL_APK_RESULT = "com.samsung.kiosk.InstallPackageResult";
