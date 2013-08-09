@@ -3024,16 +3024,18 @@ public class PhoneStatusBar extends BaseStatusBar {
     
     @Override
     public void showHideStatusBar(boolean hide) {
-    	super.showHideStatusBar(hide);
-    	
-    	if (mNavigationBarView != null) {
-    		if (hide) {
-    			mNavigationBarView.setVisibility(View.GONE);
-    			mWindowManager.removeView(mNavigationBarView);
-    		} else {
-    			mWindowManager.addView(mNavigationBarView, getNavigationBarLayoutParams());
-    			mNavigationBarView.setVisibility(View.VISIBLE);
-    		}
+    	if (mIsHidden != hide) {
+    		super.showHideStatusBar(hide);
+	    	
+	    	if (mNavigationBarView != null) {
+	    		if (hide) {
+	    			mNavigationBarView.setVisibility(View.GONE);
+	    			mWindowManager.removeView(mNavigationBarView);
+	    		} else {
+	    			mWindowManager.addView(mNavigationBarView, getNavigationBarLayoutParams());
+	    			mNavigationBarView.setVisibility(View.VISIBLE);
+	    		}
+	    	}
     	}
     }
 }
