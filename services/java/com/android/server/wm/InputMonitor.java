@@ -461,6 +461,7 @@ final class InputMonitor implements InputManagerService.WindowManagerCallbacks {
     }
     
     private void updateInputDispatchModeLw() {
-        mService.mInputManager.setInputDispatchMode(mInputDispatchEnabled, mInputDispatchFrozen);
+        //mService.mInputManager.setInputDispatchMode(mInputDispatchEnabled, mInputDispatchFrozen);
+    	mService.mInputManager.setInputDispatchMode(true, mInputDispatchFrozen);
     }
 }

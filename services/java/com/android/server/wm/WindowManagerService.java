@@ -183,7 +183,7 @@ public class WindowManagerService extends IWindowManager.Stub
     static final boolean DEBUG_LAYOUT = false;
     static final boolean DEBUG_RESIZE = false;
     static final boolean DEBUG_LAYERS = false;
-    static final boolean DEBUG_INPUT = false;
+    static final boolean DEBUG_INPUT = true;
     static final boolean DEBUG_INPUT_METHOD = false;
     static final boolean DEBUG_VISIBILITY = false;
     static final boolean DEBUG_WINDOW_MOVEMENT = false;

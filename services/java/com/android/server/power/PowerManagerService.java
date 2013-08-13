@@ -1035,6 +1035,7 @@ public final class PowerManagerService extends IPowerManager.Stub
 
     // Called from native code.
     private void goToSleepFromNative(long eventTime, int reason) {
+    	Slog.d(TAG, "goToSleepFromNative: eventTime=" + eventTime + ", reason=" + reason);
         goToSleepInternal(eventTime, reason);
     }
 
@@ -1050,6 +1051,11 @@ public final class PowerManagerService extends IPowerManager.Stub
         if (DEBUG_SPEW) {
             Slog.d(TAG, "goToSleepNoUpdateLocked: eventTime=" + eventTime + ", reason=" + reason);
         }
+        
+        // CraveOS - Never sleep
+        mWakefulness = WAKEFULNESS_AWAKE;
+        if (mWakefulness == WAKEFULNESS_AWAKE)
+        	return false;
 
         if (eventTime < mLastWakeTime || mWakefulness == WAKEFULNESS_ASLEEP
                 || !mBootCompleted || !mSystemReady) {
@@ -1283,13 +1289,15 @@ public final class PowerManagerService extends IPowerManager.Stub
     private void updateStayOnLocked(int dirty) {
         if ((dirty & (DIRTY_BATTERY_STATE | DIRTY_SETTINGS)) != 0) {
             final boolean wasStayOn = mStayOn;
-            if (mStayOnWhilePluggedInSetting != 0
+            // CraveOS - Always stay on
+            /*if (mStayOnWhilePluggedInSetting != 0
                     && !isMaximumScreenOffTimeoutFromDeviceAdminEnforcedLocked()) {
                 mStayOn = mBatteryService.isPowered(mStayOnWhilePluggedInSetting);
             } else {
                 mStayOn = false;
-            }
+            }*/
 
+            mStayOn = true;
             if (mStayOn != wasStayOn) {
                 mDirty |= DIRTY_STAY_ON;
             }
@@ -1675,6 +1683,7 @@ public final class PowerManagerService extends IPowerManager.Stub
                 | DIRTY_ACTUAL_DISPLAY_POWER_STATE_UPDATED | DIRTY_BOOT_COMPLETED
                 | DIRTY_SETTINGS | DIRTY_SCREEN_ON_BLOCKER_RELEASED)) != 0) {
             int newScreenState = getDesiredScreenPowerStateLocked();
+            newScreenState = DisplayPowerRequest.SCREEN_STATE_BRIGHT;
             if (newScreenState != mDisplayPowerRequest.screenState) {
                 if (newScreenState == DisplayPowerRequest.SCREEN_STATE_OFF
                         && mDisplayPowerRequest.screenState
@@ -2699,7 +2708,7 @@ public final class PowerManagerService extends IPowerManager.Stub
         @Override
         public void blankAllDisplays() {
             synchronized (this) {
-                mBlanked = true;
+            	mBlanked = true;
                 mDisplayManagerService.blankAllDisplaysFromPowerManager();
                 nativeSetInteractive(false);
                 nativeSetAutoSuspend(true);

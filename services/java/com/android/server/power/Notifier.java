@@ -374,7 +374,8 @@ final class Notifier {
                 if (mPendingWakeUpBroadcast || mPendingGoToSleepBroadcast
                         || mActualPowerState == POWER_STATE_ASLEEP) {
                     mPendingGoToSleepBroadcast = false;
-                    mBroadcastedPowerState = POWER_STATE_ASLEEP;
+                    //mBroadcastedPowerState = POWER_STATE_ASLEEP;
+                    mBroadcastedPowerState = POWER_STATE_AWAKE;
                 } else {
                     finishPendingBroadcastLocked();
                     return;
@@ -390,7 +391,7 @@ final class Notifier {
                     return;
                 }
             }
-
+            
             mBroadcastStartTime = SystemClock.uptimeMillis();
             powerState = mBroadcastedPowerState;
             goToSleepReason = mLastGoToSleepReason;

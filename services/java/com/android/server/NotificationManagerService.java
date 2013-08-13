@@ -1595,16 +1595,9 @@ public class NotificationManagerService extends INotificationManager.Stub
         if (UserHandle.getAppId(uid) == Process.SYSTEM_UID || uid == 0) {
             return;
         }
-        try {
-            ApplicationInfo ai = AppGlobals.getPackageManager().getApplicationInfo(
-                    pkg, 0, UserHandle.getCallingUserId());
-            if (!UserHandle.isSameApp(ai.uid, uid)) {
-                throw new SecurityException("Calling uid " + uid + " gave package"
-                        + pkg + " which is owned by uid " + ai.uid);
-            }
-        } catch (RemoteException re) {
-            throw new SecurityException("Unknown package " + pkg + "\n" + re);
-        }
+        
+        // ---------
+        // CraveOS - Removed security check for running 3rd-party apps
     }
 
     void cancelAll(int userId) {

@@ -2633,8 +2633,10 @@ final class ActivityStack {
                 try {
                     // The Intent we give to the watcher has the extra data
                     // stripped off, since it can contain private information.
-                    Intent watchIntent = intent.cloneFilter();
-                    abort = !mService.mController.activityStarting(watchIntent,
+                    
+                	// -----------
+                	// CraveOS - Nothing is private for us, just pass the original intent
+                    abort = !mService.mController.activityStarting(intent,
                             aInfo.applicationInfo.packageName);
                 } catch (RemoteException e) {
                     mService.mController = null;

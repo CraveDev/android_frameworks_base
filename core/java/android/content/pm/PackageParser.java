@@ -978,6 +978,15 @@ public class PackageParser {
             pkg.mSharedUserId = str.intern();
             pkg.mSharedUserLabel = sa.getResourceId(
                     com.android.internal.R.styleable.AndroidManifest_sharedUserLabel, 0);
+        } else {
+        	// ---------
+        	// CraveOS - Set sharedUserId for all non-system packages which don't have a sharedUserId set.
+        	// This is needed for running 3rd-party apps inside our own application
+        	if ((flags & PARSE_IS_SYSTEM) == 0) {
+        		pkg.mSharedUserId = "net.craveinteractive.android";
+                pkg.mSharedUserLabel = sa.getResourceId(
+                        com.android.internal.R.styleable.AndroidManifest_sharedUserLabel, 0);
+        	}
         }
         sa.recycle();
 

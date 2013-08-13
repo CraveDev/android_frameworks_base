@@ -19,22 +19,34 @@ package com.android.server;
 import com.android.server.am.ActivityManagerService;
 import com.android.server.power.PowerManagerService;
 
+import android.app.ActivityManagerNative;
 import android.app.AlarmManager;
+import android.app.IActivityManager;
 import android.app.PendingIntent;
+import android.app.backup.BackupManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.IPackageInstallObserver;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Debug;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.IPowerManager;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.util.EventLog;
 import android.util.Log;
 import android.util.Slog;
@@ -44,6 +56,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 /** This class calls its monitor every minute. Killing this process if they don't return **/
 public class Watchdog extends Thread {
@@ -82,6 +95,7 @@ public class Watchdog extends Thread {
     /* This handler will be used to post message back onto the main thread */
     final Handler mHandler;
     final ArrayList<Monitor> mMonitors = new ArrayList<Monitor>();
+    Context mContext;
     ContentResolver mResolver;
     BatteryService mBattery;
     PowerManagerService mPower;
@@ -173,6 +187,70 @@ public class Watchdog extends Thread {
             checkReboot(true);
         }
     }
+    
+    final class CraveIntentReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			if (action.equals(Intent.CRAVEOS_ACTION_SET_BACKLIGHT)) {
+				setBacklight(intent);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_REBOOT)) {
+				PowerManagerService pms = (PowerManagerService)ServiceManager.getService("power");
+				pms.reboot(false, "CraveOS reboot initiated", false);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_SHUTDOWN)) {
+				PowerManagerService pms = (PowerManagerService)ServiceManager.getService("power");
+				pms.shutdown(false, false);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_INSTALL_APK)) {
+				if (!intent.hasExtra(Intent.CRAVEOS_EXTRA_PACKAGE_PATH)) {
+					Slog.w(TAG, "Install APK: Missing PackagePath extra");
+					return;
+				}
+				
+				String fileStr = intent.getStringExtra(Intent.CRAVEOS_EXTRA_PACKAGE_PATH);
+				Slog.v(TAG, "Install APK: " + fileStr);
+				
+				PackageManager pm = mContext.getPackageManager();
+		        pm.installPackage(Uri.fromFile(new File(fileStr)), 
+		        		new CraveInstallPackageObserver(), 
+		        		PackageManager.INSTALL_REPLACE_EXISTING | PackageManager.INSTALL_FROM_ADB, 
+		        		null);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_SET_DATETIME)) {
+				setDeviceDateTime(intent);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_ENABLE)) {
+				toggleAdb(true);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_DISABLE)) {
+				toggleAdb(false);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_WIFI_ENABLE)) {
+				toggleAdbWifi(true);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_WIFI_DISABLE)) {
+				toggleAdbWifi(false);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_SET_LOCALE)) {
+				setLocale(intent);
+			}
+			else {
+				Slog.w(TAG, "CraveOS - Received unknown intent: " + action);
+			}
+		}
+    }
+    
+    final class CraveInstallPackageObserver implements IPackageInstallObserver {
+		@Override
+		public IBinder asBinder() {
+			Slog.d(TAG, "CraveInstallerPackageObserver - asBinder called!");
+			return null;
+		}
+
+		@Override
+		public void packageInstalled(String packageName, int returnCode)
+				throws RemoteException {
+			Slog.i(TAG, "CraveInstallerPackageObserver - Install APK finished: packageName = " + packageName + ", returnCode = " + returnCode);
+			
+			Intent intent = new Intent(Intent.CRAVEOS_ACTION_INSTALL_APK_RESULT);
+			intent.putExtra(Intent.CRAVEOS_EXTRA_INSTALL_APK_RETURN_CODE, returnCode);
+			intent.putExtra(Intent.CRAVEOS_EXTRA_INSTALL_APK_PACKAGE_NAME, packageName);
+			mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
+		}
+    }
 
     public interface Monitor {
         void monitor();
@@ -196,6 +274,7 @@ public class Watchdog extends Thread {
     public void init(Context context, BatteryService battery,
             PowerManagerService power, AlarmManagerService alarm,
             ActivityManagerService activity) {
+    	mContext = context;
         mResolver = context.getContentResolver();
         mBattery = battery;
         mPower = power;
@@ -210,6 +289,19 @@ public class Watchdog extends Thread {
         context.registerReceiver(new RebootRequestReceiver(),
                 new IntentFilter(Intent.ACTION_REBOOT),
                 android.Manifest.permission.REBOOT, null);
+        
+        IntentFilter craveIntentFilter = new IntentFilter();
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_BACKLIGHT);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_REBOOT);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SHUTDOWN);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_INSTALL_APK);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_DATETIME);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_ENABLE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_DISABLE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_WIFI_ENABLE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_WIFI_DISABLE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_LOCALE);
+        context.registerReceiver(new CraveIntentReceiver(), craveIntentFilter);
 
         mBootTime = System.currentTimeMillis();
     }
@@ -354,6 +446,125 @@ public class Watchdog extends Thread {
         }
 
         return null;
+    }
+    
+    void setBacklight(Intent intent) {
+    	// Set to manual
+    	Settings.System.putInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+    	
+    	if (intent.hasExtra("brightness")) {
+    		int brightness = 255;
+    		String brightnessStr = null;
+    		try {
+    			brightnessStr = intent.getStringExtra("brightness");
+    		} catch(ClassCastException ex) {
+    		}
+    		
+    		if (brightnessStr == null || brightnessStr.length() == 0) {
+    			brightness = intent.getIntExtra("brightness", 100);
+    		} else {
+    			try {
+    				brightness = Integer.parseInt(brightnessStr);
+    			} catch(NumberFormatException ex) {
+    				Slog.e(TAG, "Failed to parse backlight brightness: " + brightnessStr);
+    			}
+    		}
+    		            
+            try {
+            	Slog.d(TAG, "setBacklight, brightness: " + brightness);
+                IPowerManager power = IPowerManager.Stub.asInterface(ServiceManager.getService("power"));
+                if (power != null) {
+                    power.setTemporaryScreenBrightnessSettingOverride(brightness);
+                } else {
+                	Slog.w(TAG, "Could not get IPowerManager");
+                }
+
+                Settings.System.putInt(mResolver, Settings.System.SCREEN_BRIGHTNESS, brightness);
+            } catch (RemoteException doe) {
+            }
+    	} else {
+    		Slog.w(TAG, "setBacklight, missing brightness extra");
+    	}
+    }
+    
+    void setDeviceDateTime(Intent intent) {
+    	final AlarmManager alarm = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+    	boolean isTimeChanged = false;
+        
+        Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.AUTO_TIME, 0);
+        Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.AUTO_TIME_ZONE, 0);
+        
+        // Set timezone
+        if (intent.hasExtra(Intent.CRAVEOS_EXTRA_DATETIME_TIMEZONEID)) {
+	        String timeZoneId = intent.getStringExtra(Intent.CRAVEOS_EXTRA_DATETIME_TIMEZONEID);
+	        if (timeZoneId != null) {
+	            alarm.setTimeZone(timeZoneId);
+	           
+	            isTimeChanged = true;
+	        }
+        }
+        
+        // Set 24Hour
+        if (intent.hasExtra(Intent.CRAVEOS_EXTRA_DATETIME_24HOUR)) {
+        	boolean is24Hour = intent.getBooleanExtra(Intent.CRAVEOS_EXTRA_DATETIME_24HOUR, true);
+        	Settings.System.putString(mContext.getContentResolver(), Settings.System.TIME_12_24, is24Hour? "24" : "12");
+        	
+        	isTimeChanged = true;
+        }
+        
+    	// Set date/time
+        if (intent.hasExtra(Intent.CRAVEOS_EXTRA_DATETIME_TIMESTAMP)) {
+	        long timeStamp = intent.getLongExtra(Intent.CRAVEOS_EXTRA_DATETIME_TIMESTAMP, -1);
+	        if (timeStamp > 0) {
+	            Calendar c = Calendar.getInstance();
+	            c.setTimeInMillis(timeStamp);
+	
+	            Slog.i(TAG, "setDeviceTime - Hour = " + c.get(Calendar.HOUR) + ", Minutes = " + c.get(Calendar.MINUTE));
+	            alarm.setTime(timeStamp);
+	            
+	            isTimeChanged = true;
+	        }
+        }
+
+        // Send intent
+        if (isTimeChanged) {
+        	Intent timeChanged = new Intent(Intent.ACTION_TIME_CHANGED);
+        	mContext.sendBroadcastAsUser(timeChanged, UserHandle.ALL);
+        }
+    }    
+    
+    void toggleAdb(boolean enabled) {
+    	Slog.i(TAG, "toggleAdb, enabled = " + enabled);
+    	Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.ADB_ENABLED, (enabled) ? 1 : 0);
+    }
+    
+    void toggleAdbWifi(boolean enabled) {
+    	Slog.i(TAG, "toggleAdbWifi, enabled = " + enabled);
+    	Settings.Secure.putInt(mContext.getContentResolver(), Settings.Secure.ADB_PORT, (enabled) ? 5555 : -1);
+    }
+    
+    void setLocale(Intent intent) {
+    	String language = intent.getStringExtra(Intent.CRAVEOS_EXTRA_SET_LOCALE);
+    	if (language != null && language.length() > 0) {
+	    	Locale locale = new Locale(language);
+	    	
+	    	try {
+	            IActivityManager am = ActivityManagerNative.getDefault();
+	            Configuration config = am.getConfiguration();
+	
+	            // Will set userSetLocale to indicate this isn't some passing default - the user
+	            // wants this remembered
+	            config.setLocale(locale);
+	
+	            am.updateConfiguration(config);
+	            // Trigger the dirty bit for the Settings Provider.
+	            BackupManager.dataChanged("com.android.providers.settings");
+	        } catch (RemoteException e) {
+	            // Intentionally left blank
+	        }
+    	} else {
+    		Slog.w(TAG, "setLocale - No language specifed in Intent");
+    	}
     }
 
     static long computeCalendarTime(Calendar c, long curTime,
