@@ -19,8 +19,11 @@ package com.android.server;
 import com.android.server.am.ActivityManagerService;
 import com.android.server.power.PowerManagerService;
 
+import android.app.ActivityManagerNative;
 import android.app.AlarmManager;
+import android.app.IActivityManager;
 import android.app.PendingIntent;
+import android.app.backup.BackupManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -28,6 +31,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.IPackageInstallObserver;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Debug;
@@ -52,6 +56,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 /** This class calls its monitor every minute. Killing this process if they don't return **/
 public class Watchdog extends Thread {
@@ -219,6 +224,8 @@ public class Watchdog extends Thread {
 				toggleAdbWifi(true);
 			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_WIFI_DISABLE)) {
 				toggleAdbWifi(false);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_SET_LOCALE)) {
+				setLocale(intent);
 			}
 			else {
 				Slog.w(TAG, "CraveOS - Received unknown intent: " + action);
@@ -293,6 +300,7 @@ public class Watchdog extends Thread {
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_DISABLE);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_WIFI_ENABLE);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_WIFI_DISABLE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_LOCALE);
         context.registerReceiver(new CraveIntentReceiver(), craveIntentFilter);
 
         mBootTime = System.currentTimeMillis();
@@ -441,10 +449,18 @@ public class Watchdog extends Thread {
     }
     
     void setBacklight(Intent intent) {
+    	// Set to manual
+    	Settings.System.putInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+    	
     	if (intent.hasExtra("brightness")) {
     		int brightness = 255;
-    		String brightnessStr = intent.getStringExtra("brightness");
-    		if (brightnessStr == null) {
+    		String brightnessStr = null;
+    		try {
+    			brightnessStr = intent.getStringExtra("brightness");
+    		} catch(ClassCastException ex) {
+    		}
+    		
+    		if (brightnessStr == null || brightnessStr.length() == 0) {
     			brightness = intent.getIntExtra("brightness", 100);
     		} else {
     			try {
@@ -455,9 +471,12 @@ public class Watchdog extends Thread {
     		}
     		            
             try {
+            	Slog.d(TAG, "setBacklight, brightness: " + brightness);
                 IPowerManager power = IPowerManager.Stub.asInterface(ServiceManager.getService("power"));
                 if (power != null) {
                     power.setTemporaryScreenBrightnessSettingOverride(brightness);
+                } else {
+                	Slog.w(TAG, "Could not get IPowerManager");
                 }
 
                 Settings.System.putInt(mResolver, Settings.System.SCREEN_BRIGHTNESS, brightness);
@@ -522,6 +541,30 @@ public class Watchdog extends Thread {
     void toggleAdbWifi(boolean enabled) {
     	Slog.i(TAG, "toggleAdbWifi, enabled = " + enabled);
     	Settings.Secure.putInt(mContext.getContentResolver(), Settings.Secure.ADB_PORT, (enabled) ? 5555 : -1);
+    }
+    
+    void setLocale(Intent intent) {
+    	String language = intent.getStringExtra(Intent.CRAVEOS_EXTRA_SET_LOCALE);
+    	if (language != null && language.length() > 0) {
+	    	Locale locale = new Locale(language);
+	    	
+	    	try {
+	            IActivityManager am = ActivityManagerNative.getDefault();
+	            Configuration config = am.getConfiguration();
+	
+	            // Will set userSetLocale to indicate this isn't some passing default - the user
+	            // wants this remembered
+	            config.setLocale(locale);
+	
+	            am.updateConfiguration(config);
+	            // Trigger the dirty bit for the Settings Provider.
+	            BackupManager.dataChanged("com.android.providers.settings");
+	        } catch (RemoteException e) {
+	            // Intentionally left blank
+	        }
+    	} else {
+    		Slog.w(TAG, "setLocale - No language specifed in Intent");
+    	}
     }
 
     static long computeCalendarTime(Calendar c, long curTime,

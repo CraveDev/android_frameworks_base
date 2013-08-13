@@ -631,6 +631,9 @@ public class Intent implements Parcelable, Cloneable {
 	public static final String CRAVEOS_ACTION_POWER_SHORT_PRESS = "android.crave.intent.POWER_SHORT_PRESS";
 	public static final String CRAVEOS_ACTION_POWER_LONG_PRESS = "android.crave.intent.POWER_LONG_PRESS";
 	
+	public static final String CRAVEOS_ACTION_SET_LOCALE = "android.crave.intent.SET_LOCALE";
+	public static final String CRAVEOS_EXTRA_SET_LOCALE = "locale";
+	
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
     // Standard intent activity actions (see action variable).
