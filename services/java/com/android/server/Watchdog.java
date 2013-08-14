@@ -457,7 +457,7 @@ public class Watchdog extends Thread {
     		String brightnessStr = null;
     		try {
     			brightnessStr = intent.getStringExtra("brightness");
-    		} catch(ClassCastException ex) {
+    		} catch(Exception ex) {
     		}
     		
     		if (brightnessStr == null || brightnessStr.length() == 0) {
@@ -465,7 +465,7 @@ public class Watchdog extends Thread {
     		} else {
     			try {
     				brightness = Integer.parseInt(brightnessStr);
-    			} catch(NumberFormatException ex) {
+    			} catch(Exception ex) {
     				Slog.e(TAG, "Failed to parse backlight brightness: " + brightnessStr);
     			}
     		}
