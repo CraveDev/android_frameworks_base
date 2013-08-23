@@ -1943,6 +1943,13 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
         case EventEntry::TYPE_KEY: {
             KeyEntry* keyEntry = static_cast<KeyEntry*>(eventEntry);
 
+            // CraveOS - On Sony this scanCode is spammed somehow when hooking device on power
+            if (keyEntry->deviceId == 2 && keyEntry->scanCode == 194) {
+            	connection->outboundQueue.dequeue(dispatchEntry);
+				traceOutboundQueueLengthLocked(connection);
+				return;
+            }
+
             // Publish the key event.
             status = connection->inputPublisher.publishKeyEvent(dispatchEntry->seq,
                     keyEntry->deviceId, keyEntry->source,
