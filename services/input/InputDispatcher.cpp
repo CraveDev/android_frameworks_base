@@ -1944,6 +1944,7 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
             KeyEntry* keyEntry = static_cast<KeyEntry*>(eventEntry);
 
             // CraveOS - On Sony this scanCode is spammed somehow when hooking device on power
+            // We just ignore this "KeyEvent"
             if (keyEntry->deviceId == 2 && keyEntry->scanCode == 194) {
             	connection->outboundQueue.dequeue(dispatchEntry);
 				traceOutboundQueueLengthLocked(connection);
