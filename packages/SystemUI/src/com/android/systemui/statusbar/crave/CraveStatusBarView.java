@@ -40,14 +40,17 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
             KeyEvent.KEYCODE_BACK, R.drawable.ic_sysbar_back,
             R.drawable.ic_sysbar_back_land, R.drawable.ic_sysbar_back_side, BACK_STRING);
 	
-	Typeface mTypefaceRegular;
-	Typeface mTypefaceMedium;
+	public static Typeface TypefaceRegular;
+	public static Typeface TypefaceMedium;
+	public static Typeface TypefaceDigital;
 	
 	HashMap<String, ComponentContainer> mComponentMap = new HashMap<String, ComponentContainer>();
 	
 	ImageView mManagementButton;
 	LinearLayout mLeftContainer;
 	LinearLayout mRightContainer;
+	
+	CraveClock mClock;
 	
 	class ComponentContainer {
 		View view;
@@ -66,13 +69,17 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 	}
 	
 	public void initialize() {
-		mTypefaceRegular = Typeface.createFromAsset(mContext.getAssets(), "fonts/KievitOT-Regular.otf");
-		if (mTypefaceRegular == null)
+		TypefaceRegular = Typeface.createFromAsset(mContext.getAssets(), "fonts/KievitOT-Regular.otf");
+		if (TypefaceRegular == null)
 			Slog.e(TAG, "Failed to load regular typeface");
 		
-		mTypefaceMedium = Typeface.createFromAsset(mContext.getAssets(), "fonts/KievitOT-Medium.otf");
-		if (mTypefaceMedium == null)
+		TypefaceMedium = Typeface.createFromAsset(mContext.getAssets(), "fonts/KievitOT-Medium.otf");
+		if (TypefaceMedium == null)
 			Slog.e(TAG, "Failed to load medium typeface");
+		
+		TypefaceDigital = Typeface.createFromAsset(mContext.getAssets(), "fonts/KievitOTLF-Medium.otf");
+		if (TypefaceDigital == null)
+			Slog.e(TAG, "Failed to load medium digital typeface");
 		
 		mLeftContainer = (LinearLayout)findViewById(R.id.leftArea);
 		mRightContainer = (LinearLayout)findViewById(R.id.rightArea);
@@ -80,10 +87,10 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		mManagementButton = (ImageView)findViewById(R.id.managementButton);
 		mManagementButton.setOnClickListener(this);
 		
-		loadDefaultButtons();
+		loadDefaultComponents();
 	}
 	
-	private void loadDefaultButtons() {
+	private void loadDefaultComponents() {
 		// Back button
 		KeyButtonView btnBack = (KeyButtonView)findViewById(R.id.one);
 		btnBack.setInfo(BACK, false, false);
@@ -96,7 +103,12 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		btnHome.setInfo(HOME, false, false);
 		container = new ComponentContainer(btnHome, -1);
 		container.isCustom = false;
-		mComponentMap.put(HOME_STRING, container);
+		mComponentMap.put(HOME_STRING, container); 
+		
+		// Crave Clock
+		mClock = (CraveClock)findViewById(R.id.craveClock); 
+		mClock.setTypeface(TypefaceDigital);
+		mClock.setTextSize(28);
 	}
 
 	@Override
@@ -177,15 +189,14 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 					", action=" + action +
 					", position=" + position + ")");
 		
-		ComponentContainer container;
+		LinearLayout view = createContainer(key);
 		if (icon != null) {
-			ImageView img = createIcon(key, icon);
-			container = new ComponentContainer(img, position);
+			view.addView(createIcon(icon));
 		} else {			
-			Button btn = createButton(key, text);
-			container = new ComponentContainer(btn, position);
+			view.addView(createButton(text));
 		}
 		
+		ComponentContainer container = new ComponentContainer(view, position);
 		container.isCustom = isCustom;
 		
 		if (action.length() > 0) {
@@ -195,8 +206,9 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		
 		if (position == -1)
 			mLeftContainer.addView(container.view);
-		else if (position == 1)
-			mRightContainer.addView(container.view);
+		else if (position == 1) {
+			mRightContainer.addView(container.view, 0);
+		}
 		
 		mComponentMap.put(key, container);
 	}
@@ -216,21 +228,19 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		}
 	}
 	
-	private ImageView createIcon(String key, byte[] icon) {
+	private ImageView createIcon(byte[] icon) {		
 		Bitmap bmp = BitmapFactory.decodeByteArray(icon, 0, icon.length);
 		ImageView img = new ImageView(getContext());
-		img.setTag(key);
 		img.setImageBitmap(bmp);
 		img.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 		
 		return img;
 	}
 	
-	private Button createButton(String key, String text) {
+	private Button createButton(String text) {
 		Button btn = new Button(getContext());
-		btn.setTag(key);
 		btn.setTextColor(mContext.getResources().getColorStateList(R.color.button_text));
-		btn.setTypeface(mTypefaceMedium);
+		btn.setTypeface(TypefaceMedium);
 		btn.setTextSize(22);
 		btn.setBackgroundResource(R.drawable.crave_nav_button);
 		btn.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
@@ -238,5 +248,18 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		btn.setText(text);
 		
 		return btn;
+	}
+	
+	private LinearLayout createContainer(String key) {
+		LinearLayout v = new LinearLayout(getContext());
+		v.setTag(key);
+		v.setOrientation(LinearLayout.HORIZONTAL);
+		v.setPadding(10, 0, 10, 0);
+		
+		LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		params.setMargins(10, 0, 10, 0);
+		v.setLayoutParams(params);
+		
+		return v;
 	}
 }

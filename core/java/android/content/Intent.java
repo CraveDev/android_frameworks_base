@@ -634,6 +634,21 @@ public class Intent implements Parcelable, Cloneable {
 	public static final String CRAVEOS_ACTION_SET_LOCALE = "android.crave.intent.SET_LOCALE";
 	public static final String CRAVEOS_EXTRA_SET_LOCALE = "locale";
 	
+	public static final String CRAVEOS_NAVBAR_ACTION_MANAGEMENT_BUTTON = "android.crave.intent.navbar.MANAGEMENT_BUTTON";
+	
+	public static final String CRAVEOS_NAVBAR_ACTION_ADD = "android.crave.intent.navbar.ADD_BUTTON";
+	public static final String CRAVEOS_NAVBAR_ACTION_REMOVE = "android.crave.intent.navbar.REMOVE";
+	public static final String CRAVEOS_NAVBAR_ACTION_CLEAR = "android.crave.intent.navbar.CLEAR";
+	public static final String CRAVEOS_NAVBAR_ACTION_SET_VISIBILITY = "android.crave.intent.navbar.SET_VISIBILITY";
+	
+	public static final String CRAVEOS_NAVBAR_EXTRA_SIDE = "android.crave.intent.navbar.extra.SIDE";
+	public static final String CRAVEOS_NAVBAR_EXTRA_KEY	= "android.crave.intent.navbar.extra.KEY";
+	public static final String CRAVEOS_NAVBAR_EXTRA_ADD_ICON = "android.crave.intent.navbar.extra.ADD_ICON";
+	public static final String CRAVEOS_NAVBAR_EXTRA_ADD_TEXT = "android.crave.intent.navbar.extra.ADD_TEXT";
+	public static final String CRAVEOS_NAVBAR_EXTRA_ADD_ACTION = "android.crave.intent.navbar.extra.ADD_ACTION";
+	public static final String CRAVEOS_NAVBAR_EXTRA_VISIBILITY = "android.crave.intent.navbar.extra.VISIBILITY";
+	
+	
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
     // Standard intent activity actions (see action variable).

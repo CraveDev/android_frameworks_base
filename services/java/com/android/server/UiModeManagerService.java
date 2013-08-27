@@ -55,8 +55,8 @@ final class UiModeManagerService extends IUiModeManager.Stub {
     private static final boolean LOG = false;
 
     // Enable launching of applications when entering the dock.
-    private static final boolean ENABLE_LAUNCH_CAR_DOCK_APP = true;
-    private static final boolean ENABLE_LAUNCH_DESK_DOCK_APP = true;
+    private static final boolean ENABLE_LAUNCH_CAR_DOCK_APP = false;
+    private static final boolean ENABLE_LAUNCH_DESK_DOCK_APP = false;
 
     private final Context mContext;
     private final TwilightService mTwilightService;
@@ -292,7 +292,7 @@ final class UiModeManagerService extends IUiModeManager.Stub {
                 mDockState = newState;
                 setCarModeLocked(mDockState == Intent.EXTRA_DOCK_STATE_CAR);
                 if (mSystemReady) {
-                    updateLocked(UiModeManager.ENABLE_CAR_MODE_GO_CAR_HOME, 0);
+                    //updateLocked(UiModeManager.ENABLE_CAR_MODE_GO_CAR_HOME, 0);
                 }
             }
         }
@@ -483,7 +483,7 @@ final class UiModeManagerService extends IUiModeManager.Stub {
                 action, enableFlags, disableFlags, category));
         }
 
-        sendConfigurationAndStartDreamOrDockAppLocked(category);
+        //sendConfigurationAndStartDreamOrDockAppLocked(category);
     }
 
     private void sendConfigurationAndStartDreamOrDockAppLocked(String category) {
@@ -520,7 +520,7 @@ final class UiModeManagerService extends IUiModeManager.Stub {
         }
 
         // Send the new configuration.
-        sendConfigurationLocked();
+        //sendConfigurationLocked();
 
         // If we did not start a dock app, then start dreaming if supported.
         if (category != null && !dockAppStarted) {

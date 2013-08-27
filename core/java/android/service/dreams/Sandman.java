@@ -52,8 +52,9 @@ public final class Sandman {
      * False if we should dream instead, if appropriate.
      */
     public static boolean shouldStartDockApp(Context context, Intent intent) {
-        ComponentName name = intent.resolveActivity(context.getPackageManager());
-        return name != null && !name.equals(SOMNAMBULATOR_COMPONENT);
+    	return false;
+        /*ComponentName name = intent.resolveActivity(context.getPackageManager());
+        return name != null && !name.equals(SOMNAMBULATOR_COMPONENT);*/
     }
 
     /**
@@ -106,18 +107,26 @@ public final class Sandman {
     }
 
     private static boolean isScreenSaverEnabled(Context context) {
-        int def = context.getResources().getBoolean(
+        /*int def = context.getResources().getBoolean(
                 com.android.internal.R.bool.config_dreamsEnabledByDefault) ? 1 : 0;
         return Settings.Secure.getIntForUser(context.getContentResolver(),
                 Settings.Secure.SCREENSAVER_ENABLED, def,
-                UserHandle.USER_CURRENT) != 0;
+                UserHandle.USER_CURRENT) != 0;*/
+    	
+    	// -----------
+    	// CraveOS - Never show screensaver
+    	return false;
     }
 
     private static boolean isScreenSaverActivatedOnDock(Context context) {
-        int def = context.getResources().getBoolean(
+        /*int def = context.getResources().getBoolean(
                 com.android.internal.R.bool.config_dreamsActivatedOnDockByDefault) ? 1 : 0;
         return Settings.Secure.getIntForUser(context.getContentResolver(),
                 Settings.Secure.SCREENSAVER_ACTIVATE_ON_DOCK, def,
-                UserHandle.USER_CURRENT) != 0;
+                UserHandle.USER_CURRENT) != 0;*/
+    	
+    	// -----------
+    	// CraveOS - Never show screensaver
+    	return false;
     }
 }
