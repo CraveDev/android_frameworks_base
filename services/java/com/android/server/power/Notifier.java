@@ -374,8 +374,7 @@ final class Notifier {
                 if (mPendingWakeUpBroadcast || mPendingGoToSleepBroadcast
                         || mActualPowerState == POWER_STATE_ASLEEP) {
                     mPendingGoToSleepBroadcast = false;
-                    //mBroadcastedPowerState = POWER_STATE_ASLEEP;
-                    mBroadcastedPowerState = POWER_STATE_AWAKE;
+                    mBroadcastedPowerState = POWER_STATE_ASLEEP;
                 } else {
                     finishPendingBroadcastLocked();
                     return;

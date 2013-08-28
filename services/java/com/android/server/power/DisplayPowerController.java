@@ -1455,7 +1455,7 @@ final class DisplayPowerController {
         @Override
         public void onTwilightStateChanged() {
             mTwilightChanged = true;
-            //updatePowerState();
+            updatePowerState();
         }
     };
 

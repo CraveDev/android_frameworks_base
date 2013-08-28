@@ -799,6 +799,8 @@ void NativeInputManager::interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
     // - Ask the window manager what to do with normal events and trusted injected events.
     // - For normal events wake and brighten the screen if currently off or dim.
     if ((policyFlags & POLICY_FLAG_TRUSTED)) {
+    	ALOGD("interceptKeyBeforeQueueing - Trusted");
+
         nsecs_t when = keyEvent->getEventTime();
         bool isScreenOn = this->isScreenOn();
         bool isScreenBright = this->isScreenBright();
@@ -832,6 +834,7 @@ void NativeInputManager::interceptKeyBeforeQueueing(const KeyEvent* keyEvent,
 
         handleInterceptActions(wmActions, when, /*byref*/ policyFlags);
     } else {
+    	ALOGD("interceptKeyBeforeQueueing - Adding POLICY_FLAG_PASS_TO_USER flag.");
         policyFlags |= POLICY_FLAG_PASS_TO_USER;
     }
 }
@@ -850,16 +853,16 @@ void NativeInputManager::interceptMotionBeforeQueueing(nsecs_t when, uint32_t& p
                 policyFlags |= POLICY_FLAG_BRIGHT_HERE;
             }
         } else {
-            /*JNIEnv* env = jniEnv();
+            JNIEnv* env = jniEnv();
             jint wmActions = env->CallIntMethod(mServiceObj,
                         gServiceClassInfo.interceptMotionBeforeQueueingWhenScreenOff,
                         policyFlags);
             if (checkAndClearExceptionFromCallback(env,
                     "interceptMotionBeforeQueueingWhenScreenOff")) {
                 wmActions = 0;
-            }*/
+            }
 
-        	jint wmActions = WM_ACTION_WAKE_UP;
+        	//jint wmActions = WM_ACTION_WAKE_UP;
             policyFlags |= POLICY_FLAG_WOKE_HERE | POLICY_FLAG_BRIGHT_HERE;
             handleInterceptActions(wmActions, when, /*byref*/ policyFlags);
         }
@@ -968,6 +971,7 @@ bool NativeInputManager::dispatchUnhandledKey(const sp<InputWindowHandle>& input
 }
 
 void NativeInputManager::pokeUserActivity(nsecs_t eventTime, int32_t eventType) {
+	ALOGD("NativeInputManager::pokeUserActivity (eventTime=%lld, eventType=%d", eventTime, eventType);
     android_server_PowerManagerService_userActivity(eventTime, eventType);
 }
 

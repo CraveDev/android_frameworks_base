@@ -76,7 +76,7 @@ public final class PowerManagerService extends IPowerManager.Stub
     private static final String TAG = "PowerManagerService";
 
     private static final boolean DEBUG = false;
-    private static final boolean DEBUG_SPEW = DEBUG && true;
+    private static final boolean DEBUG_SPEW = DEBUG;
 
     // Message: Sent when a user activity timeout occurs to update the power state.
     private static final int MSG_USER_ACTIVITY_TIMEOUT = 1;
@@ -542,10 +542,10 @@ public final class PowerManagerService extends IPowerManager.Stub
     private void updateSettingsLocked() {
         final ContentResolver resolver = mContext.getContentResolver();
 
-        mDreamsEnabledSetting = (Settings.Secure.getIntForUser(resolver,
+        mDreamsEnabledSetting = false; /*(Settings.Secure.getIntForUser(resolver,
                 Settings.Secure.SCREENSAVER_ENABLED,
                 mDreamsEnabledByDefaultConfig ? 1 : 0,
-                UserHandle.USER_CURRENT) != 0);
+                UserHandle.USER_CURRENT) != 0);*/
         mDreamsActivateOnSleepSetting = (Settings.Secure.getIntForUser(resolver,
                 Settings.Secure.SCREENSAVER_ACTIVATE_ON_SLEEP,
                 mDreamsActivatedOnSleepByDefaultConfig ? 1 : 0,
@@ -1053,9 +1053,9 @@ public final class PowerManagerService extends IPowerManager.Stub
         }
         
         // CraveOS - Never sleep
-        mWakefulness = WAKEFULNESS_AWAKE;
+        /*mWakefulness = WAKEFULNESS_AWAKE;
         if (mWakefulness == WAKEFULNESS_AWAKE)
-        	return false;
+        	return false;*/
 
         if (eventTime < mLastWakeTime || mWakefulness == WAKEFULNESS_ASLEEP
                 || !mBootCompleted || !mSystemReady) {
@@ -1168,9 +1168,15 @@ public final class PowerManagerService extends IPowerManager.Stub
             dirtyPhase2 |= dirtyPhase1;
             mDirty = 0;
 
+            if (DEBUG_SPEW)
+            	Slog.d(TAG, "updatePowerStateLocked - Start loop (dirtyPhase1="+dirtyPhase1+", dirtyPhase2="+dirtyPhase2+")");
+            
             updateWakeLockSummaryLocked(dirtyPhase1);
             updateUserActivitySummaryLocked(now, dirtyPhase1);
             if (!updateWakefulnessLocked(dirtyPhase1)) {
+            	if (DEBUG_SPEW)
+            		Slog.d(TAG, "updatePowerStateLocked - End loop");
+            	
                 break;
             }
         }
@@ -1290,14 +1296,14 @@ public final class PowerManagerService extends IPowerManager.Stub
         if ((dirty & (DIRTY_BATTERY_STATE | DIRTY_SETTINGS)) != 0) {
             final boolean wasStayOn = mStayOn;
             // CraveOS - Always stay on
-            /*if (mStayOnWhilePluggedInSetting != 0
+            if (mStayOnWhilePluggedInSetting != 0
                     && !isMaximumScreenOffTimeoutFromDeviceAdminEnforcedLocked()) {
                 mStayOn = mBatteryService.isPowered(mStayOnWhilePluggedInSetting);
             } else {
                 mStayOn = false;
-            }*/
+            }
 
-            mStayOn = true;
+            //mStayOn = true;
             if (mStayOn != wasStayOn) {
                 mDirty |= DIRTY_STAY_ON;
             }
@@ -1683,7 +1689,7 @@ public final class PowerManagerService extends IPowerManager.Stub
                 | DIRTY_ACTUAL_DISPLAY_POWER_STATE_UPDATED | DIRTY_BOOT_COMPLETED
                 | DIRTY_SETTINGS | DIRTY_SCREEN_ON_BLOCKER_RELEASED)) != 0) {
             int newScreenState = getDesiredScreenPowerStateLocked();
-            newScreenState = DisplayPowerRequest.SCREEN_STATE_BRIGHT;
+            //newScreenState = DisplayPowerRequest.SCREEN_STATE_BRIGHT;
             if (newScreenState != mDisplayPowerRequest.screenState) {
                 if (newScreenState == DisplayPowerRequest.SCREEN_STATE_OFF
                         && mDisplayPowerRequest.screenState
