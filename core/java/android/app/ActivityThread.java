@@ -1877,14 +1877,9 @@ public final class ActivityThread {
             //        + ": " + packageInfo.mResources.getAssets().isUpToDate());
             if (packageInfo != null && (packageInfo.mResources == null
                     || packageInfo.mResources.getAssets().isUpToDate())) {
-                if (packageInfo.isSecurityViolation()
-                        && (flags&Context.CONTEXT_IGNORE_SECURITY) == 0) {
-                    throw new SecurityException(
-                            "Requesting code from " + packageName
-                            + " to be run in process "
-                            + mBoundApplication.processName
-                            + "/" + mBoundApplication.appInfo.uid);
-                }
+                
+            	// CraveOS - Removed security check
+            	
                 return packageInfo;
             }
         }
@@ -1948,6 +1943,10 @@ public final class ActivityThread {
     private LoadedApk getPackageInfo(ApplicationInfo aInfo, CompatibilityInfo compatInfo,
             ClassLoader baseLoader, boolean securityViolation, boolean includeCode) {
         synchronized (mPackages) {
+        	
+        	// CraveOS - Always disable security check
+        	securityViolation = false;
+        	
             WeakReference<LoadedApk> ref;
             if (includeCode) {
                 ref = mPackages.get(aInfo.packageName);

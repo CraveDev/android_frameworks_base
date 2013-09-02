@@ -7426,8 +7426,8 @@ public final class ActivityManagerService extends ActivityManagerNative
     }
 
     public void setActivityController(IActivityController controller) {
-        enforceCallingPermission(android.Manifest.permission.SET_ACTIVITY_WATCHER,
-                "setActivityController()");
+        // CraveOS - Removed security check. We need to be able to set a custom ActivityController.
+    	
         synchronized (this) {
             mController = controller;
         }
@@ -11446,11 +11446,9 @@ public final class ActivityManagerService extends ActivityManagerNative
                             + " (pid=" + Binder.getCallingPid()
                             + ") when registering receiver " + receiver);
                 }
-                if (callerApp.info.uid != Process.SYSTEM_UID &&
-                        !callerApp.pkgList.contains(callerPackage)) {
-                    throw new SecurityException("Given caller package " + callerPackage
-                            + " is not running in process " + callerApp);
-                }
+                
+                // CraveOS - Removed security check, we don't care about the process the app is running in
+                
                 callingUid = callerApp.info.uid;
                 callingPid = callerApp.pid;
             } else {
@@ -11723,26 +11721,7 @@ public final class ActivityManagerService extends ActivityManagerNative
          * Prevent non-system code (defined here to be non-persistent
          * processes) from sending protected broadcasts.
          */
-        int callingAppId = UserHandle.getAppId(callingUid);
-        if (callingAppId == Process.SYSTEM_UID || callingAppId == Process.PHONE_UID
-            || callingAppId == Process.SHELL_UID || callingAppId == Process.BLUETOOTH_UID ||
-            callingUid == 0) {
-            // Always okay.
-        } else if (callerApp == null || !callerApp.persistent) {
-            try {
-                if (AppGlobals.getPackageManager().isProtectedBroadcast(
-                        intent.getAction())) {
-                    String msg = "Permission Denial: not allowed to send broadcast "
-                            + intent.getAction() + " from pid="
-                            + callingPid + ", uid=" + callingUid;
-                    Slog.w(TAG, msg);
-                    throw new SecurityException(msg);
-                }
-            } catch (RemoteException e) {
-                Slog.w(TAG, "Remote exception", e);
-                return ActivityManager.BROADCAST_SUCCESS;
-            }
-        }
+        // CraveOS - Removed security check. Everyone should be allowed to send these broadcasts.
 
         // Handle special intents: if this broadcast is from the package
         // manager about a package being removed, we need to remove all of
