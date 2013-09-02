@@ -877,6 +877,10 @@ public class PhoneStatusBar extends BaseStatusBar {
     }
 
     public int getStatusBarHeight() {
+    	// CraveOS - If hidden return 0
+    	if (mIsHidden)
+    		return 0;
+    	
         if (mNaturalBarHeight < 0) {
             final Resources res = mContext.getResources();
             mNaturalBarHeight =
@@ -970,7 +974,8 @@ public class PhoneStatusBar extends BaseStatusBar {
 
     private WindowManager.LayoutParams getNavigationBarLayoutParams() {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT, 
+                (mIsHidden ? 0 : LayoutParams.MATCH_PARENT),
                 WindowManager.LayoutParams.TYPE_NAVIGATION_BAR,
                     0
                     | WindowManager.LayoutParams.FLAG_TOUCHABLE_WHEN_WAKING
@@ -3007,4 +3012,19 @@ public class PhoneStatusBar extends BaseStatusBar {
         }
     }
 
+    @Override
+    public void showHideStatusBar(boolean hide) {
+    	if (mIsHidden == hide)
+    		return;
+    	
+    	super.showHideStatusBar(hide);
+    	
+    	if (mNavigationBarView != null) {
+    		if (hide) {
+    			mWindowManager.removeView(mNavigationBarView);
+    		} else {
+    			mWindowManager.addView(mNavigationBarView, getNavigationBarLayoutParams());
+    		}
+    	}
+    }
 }
