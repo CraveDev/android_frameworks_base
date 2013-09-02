@@ -31,6 +31,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.graphics.Color;
+import android.hardware.input.InputManager;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Bundle;
@@ -46,6 +47,9 @@ import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.EventLog;
 import android.util.Slog;
+import android.view.InputDevice;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -397,6 +401,16 @@ public final class BatteryService extends Binder {
                 if (mLastPlugType == BATTERY_PLUGGED_NONE) {
                     // discharging -> charging
 
+					long now = SystemClock.uptimeMillis();
+					KeyEvent keyEvent = new KeyEvent(now, now, KeyEvent.ACTION_DOWN, 255, 0, 0,
+							KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0, InputDevice.SOURCE_KEYBOARD);
+					InputManager.getInstance().injectInputEvent(keyEvent,
+									InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
+					keyEvent = new KeyEvent(now, now, KeyEvent.ACTION_UP, 255,0, 0, 
+							KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0, InputDevice.SOURCE_KEYBOARD);
+					InputManager.getInstance().injectInputEvent(keyEvent,
+									InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
+                  
                     // There's no value in this data unless we've discharged at least once and the
                     // battery level has changed; so don't log until it does.
                     if (mDischargeStartTime != 0 && mDischargeStartLevel != mBatteryLevel) {

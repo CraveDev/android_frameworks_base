@@ -615,8 +615,7 @@ class AppWidgetServiceImpl {
     }
 
     public void bindAppWidgetId(int appWidgetId, ComponentName provider, Bundle options) {
-        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.BIND_APPWIDGET,
-            "bindAppWidgetId appWidgetId=" + appWidgetId + " provider=" + provider);
+        // CraveOS - Removed security check
         bindAppWidgetIdImpl(appWidgetId, provider, options);
     }
 
