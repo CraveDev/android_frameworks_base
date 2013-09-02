@@ -166,11 +166,6 @@ public class PowerUI extends SystemUI {
                         && mBatteryStatus != BatteryManager.BATTERY_STATUS_UNKNOWN
                         && bucket < 0) {
                     showLowBatteryWarning();
-
-                    // only play SFX when the dialog comes up or the bucket changes
-                    if (bucket != oldBucket || oldPlugged) {
-                        playLowBatterySound();
-                    }
                 } else if (plugged || (bucket > oldBucket && bucket > 0)) {
                     dismissLowBatteryWarning();
                 } else if (mIntentSendBatteryLow) {
@@ -182,11 +177,6 @@ public class PowerUI extends SystemUI {
 
                 if (mIgnoreFirstPowerEvent) {
                     mIgnoreFirstPowerEvent = false;
-                } else {
-                    if (Settings.Global.getInt(cr,
-                            Settings.Global.POWER_NOTIFICATIONS_ENABLED, 0) == 1) {
-                        playPowerNotificationSound();
-                    }
                 }
             } else {
                 Slog.w(TAG, "unknown intent: " + intent);
