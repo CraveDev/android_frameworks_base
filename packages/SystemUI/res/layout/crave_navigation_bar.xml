@@ -66,17 +66,26 @@
                 android:layout_gravity="right"
                 android:gravity="center_vertical">
 		        
+			    <View 
+			        android:layout_width="15dip"
+			        android:layout_height="match_parent" />
+		        
+			    <com.android.systemui.statusbar.crave.CraveBattery
+                    android:id="@+id/craveBattery"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical|left"
+                    android:paddingRight="15dip"
+                    />
 			    <com.android.systemui.statusbar.crave.CraveClock
-                android:id="@+id/craveClock"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:singleLine="true"
-                android:paddingLeft="6dip"
-                android:paddingRight="15dp"
-                android:layout_alignParentRight="true"
-                android:gravity="center_vertical|left"
-                />
-			    
+	                android:id="@+id/craveClock"
+	                android:layout_width="wrap_content"
+	                android:layout_height="match_parent"
+	                android:singleLine="true"
+	                android:paddingRight="15dip"
+	                android:gravity="center_vertical|left"
+	                />
+				
             </LinearLayout>     
 						    
         </RelativeLayout>

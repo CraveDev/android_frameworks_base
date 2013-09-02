@@ -16,12 +16,15 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 
 import com.android.systemui.R;
 import com.android.systemui.statusbar.BaseStatusBar.NavigationBarCallback;
 import com.android.systemui.statusbar.NavigationButtons.ButtonInfo;
+import com.android.systemui.statusbar.policy.BatteryController;
+import com.android.systemui.statusbar.policy.CircleBattery;
 import com.android.systemui.statusbar.policy.KeyButtonView;
 
 public class CraveStatusBarView extends FrameLayout implements NavigationBarCallback, View.OnClickListener {
@@ -50,7 +53,10 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 	LinearLayout mLeftContainer;
 	LinearLayout mRightContainer;
 	
+	BatteryController mBatteryController;
+	
 	CraveClock mClock;
+	CraveBattery mBattery;
 	
 	class ComponentContainer {
 		View view;
@@ -109,6 +115,12 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		mClock = (CraveClock)findViewById(R.id.craveClock); 
 		mClock.setTypeface(TypefaceDigital);
 		mClock.setTextSize(28);
+		
+		// Crave battery
+		mBatteryController = new BatteryController(mContext);
+		
+		mBattery = (CraveBattery)findViewById(R.id.craveBattery);
+        mBatteryController.addStateChangedCallback(mBattery);
 	}
 
 	@Override
@@ -253,12 +265,12 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 	private LinearLayout createContainer(String key) {
 		LinearLayout v = new LinearLayout(getContext());
 		v.setTag(key);
-		v.setOrientation(LinearLayout.HORIZONTAL);
-		v.setPadding(10, 0, 10, 0);
-		
-		LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		params.setMargins(10, 0, 10, 0);
+		v.setOrientation(LinearLayout.HORIZONTAL);		
+		v.setPadding(15, 0, 15, 0);
+		MarginLayoutParams params = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		params.setMargins(15, 0, 15, 0);
 		v.setLayoutParams(params);
+		v.setGravity(Gravity.CENTER);
 		
 		return v;
 	}
