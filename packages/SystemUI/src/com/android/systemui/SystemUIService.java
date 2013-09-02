@@ -37,6 +37,8 @@ import android.view.accessibility.AccessibilityManager;
 public class SystemUIService extends Service {
     static final String TAG = "SystemUIService";
 
+    static final boolean USE_CRAVEBAR = true;
+    
     /**
      * The class names of the stuff to start.
      */
@@ -72,14 +74,18 @@ public class SystemUIService extends Service {
         // run as the current user, i.e. run across users.
         AccessibilityManager.createAsSharedAcrossUsers(this);
 
-        // Pick status bar or system bar.
-        IWindowManager wm = WindowManagerGlobal.getWindowManagerService();
-        try {
-            SERVICES[0] = wm.hasSystemNavBar()
-                    ? R.string.config_systemBarComponent
-                    : R.string.config_statusBarComponent;
-        } catch (RemoteException e) {
-            Slog.w(TAG, "Failing checking whether status bar can hide", e);
+        if (USE_CRAVEBAR) {
+        	SERVICES[0] = R.string.config_craveBarComponent;
+        } else {
+		    // Pick status bar or system bar.
+		    IWindowManager wm = WindowManagerGlobal.getWindowManagerService();
+		    try {
+		        SERVICES[0] = wm.hasSystemNavBar()
+		                ? R.string.config_systemBarComponent
+		                : R.string.config_statusBarComponent;
+		    } catch (RemoteException e) {
+		        Slog.w(TAG, "Failing checking whether status bar can hide", e);
+		    }
         }
 
         final int N = SERVICES.length;

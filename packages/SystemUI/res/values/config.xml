@@ -41,6 +41,10 @@
      interface.  This name is in the ComponentName flattened format (package/class)  -->
     <string name="config_systemBarComponent" translatable="false">com.android.systemui.statusbar.tablet.TabletStatusBar</string>
 
+    <!-- Component to be used as the system bar service.  Must implement the IStatusBar
+     interface.  This name is in the ComponentName flattened format (package/class)  -->
+    <string name="config_craveBarComponent" translatable="false">com.android.systemui.statusbar.crave.CraveStatusBar</string>
+    
     <!-- Whether or not we show the number in the bar. -->
     <bool name="config_statusBarShowNumber">false</bool>
 
