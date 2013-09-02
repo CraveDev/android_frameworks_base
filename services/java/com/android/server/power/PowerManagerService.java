@@ -542,10 +542,7 @@ public final class PowerManagerService extends IPowerManager.Stub
     private void updateSettingsLocked() {
         final ContentResolver resolver = mContext.getContentResolver();
 
-        mDreamsEnabledSetting = (Settings.Secure.getIntForUser(resolver,
-                Settings.Secure.SCREENSAVER_ENABLED,
-                mDreamsEnabledByDefaultConfig ? 1 : 0,
-                UserHandle.USER_CURRENT) != 0);
+        mDreamsEnabledSetting = false;
         mDreamsActivateOnSleepSetting = (Settings.Secure.getIntForUser(resolver,
                 Settings.Secure.SCREENSAVER_ACTIVATE_ON_SLEEP,
                 mDreamsActivatedOnSleepByDefaultConfig ? 1 : 0,
@@ -1035,7 +1032,8 @@ public final class PowerManagerService extends IPowerManager.Stub
 
     // Called from native code.
     private void goToSleepFromNative(long eventTime, int reason) {
-        goToSleepInternal(eventTime, reason);
+        // CraveOS - Never got to sleep from native
+    	// goToSleepInternal(eventTime, reason); 
     }
 
     private void goToSleepInternal(long eventTime, int reason) {

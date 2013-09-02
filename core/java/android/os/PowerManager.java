@@ -353,7 +353,8 @@ public final class PowerManager {
      * @hide
      */
     public static boolean useScreenAutoBrightnessAdjustmentFeature() {
-        return SystemProperties.getBoolean("persist.power.useautobrightadj", false);
+        // CraveOS - Never user auto brightness
+    	return false;
     }
 
     /**
