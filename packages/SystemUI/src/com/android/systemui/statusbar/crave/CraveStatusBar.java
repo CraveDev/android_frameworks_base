@@ -29,6 +29,9 @@ public class CraveStatusBar extends BaseStatusBar {
 	public static final int MSG_REMOVE_COMPONENT = 1001;
 	public static final int MSG_CLEAR_NAVBAR = 1002;
 	public static final int MSG_TOGGLE_VISIBILITY = 1003;
+	public static final int MSG_RESET_NAVBAR = 1004;
+	public static final int MSG_TOGGLE_ENABLE = 1005;
+	public static final int MSG_UPDATE_COMPONENT = 1006;
 	
 	private CraveStatusBarView mCraveStatusBarView;
 	
@@ -43,14 +46,14 @@ public class CraveStatusBar extends BaseStatusBar {
 		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_REMOVE);
 		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_CLEAR);
 		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_SET_VISIBILITY);
+		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_SET_ENABLED);
+		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_RESET);
 		mContext.registerReceiver(new CraveStatusBarReceiver(), filter);
 	}
 	
 	@Override
 	public void addIcon(String slot, int index, int viewIndex,
 			StatusBarIcon icon) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -301,6 +304,12 @@ public class CraveStatusBar extends BaseStatusBar {
             case MSG_TOGGLE_VISIBILITY:
             	toggleComponentVisiblity(m.getData());
             	break;
+            case MSG_TOGGLE_ENABLE:
+            	toggleComponentEnable(m.getData());
+            	break;
+            case MSG_UPDATE_COMPONENT:
+            	updateComponent(m.getData());
+            	break;
             }
         }
     }
@@ -321,9 +330,41 @@ public class CraveStatusBar extends BaseStatusBar {
 			text = data.getString(Intent.CRAVEOS_NAVBAR_EXTRA_ADD_TEXT);
 		}
 		
+		int type = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_TYPE, 2); // Default = button
 		int side = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_SIDE, -1);
 		
-		mCraveStatusBarView.addComponent(key, text, icon, action, side);
+		int padding = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_PADDING, 15);
+		
+		mCraveStatusBarView.addComponent(key, type, text, icon, action, side, padding);
+		
+		boolean isEnabled = data.getBoolean(Intent.CRAVEOS_NAVBAR_EXTRA_ENABLED, true);
+		int visibility = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_VISIBILITY, View.VISIBLE);
+		
+		if (!isEnabled)
+			mCraveStatusBarView.toggleComponentEnable(key, isEnabled);
+		
+		if (visibility != View.VISIBLE)
+			mCraveStatusBarView.toggleComponentVisibility(key, visibility);
+	}
+	
+	private void updateComponent(Bundle data) {
+		byte[] icon = null;
+		String text = "";
+		String key = data.getString(Intent.CRAVEOS_NAVBAR_EXTRA_KEY, "");
+		
+		if (data.containsKey(Intent.CRAVEOS_NAVBAR_EXTRA_ADD_ICON)) {
+			icon = data.getByteArray(Intent.CRAVEOS_NAVBAR_EXTRA_ADD_ICON);
+		} else if (data.containsKey(Intent.CRAVEOS_NAVBAR_EXTRA_ADD_TEXT)) {
+			text = data.getString(Intent.CRAVEOS_NAVBAR_EXTRA_ADD_TEXT);
+		}
+		
+		mCraveStatusBarView.updateComponent(key, text, icon);
+		
+		if (data.containsKey(Intent.CRAVEOS_NAVBAR_EXTRA_ENABLED))
+			mCraveStatusBarView.toggleComponentEnable(key, data.getBoolean(Intent.CRAVEOS_NAVBAR_EXTRA_ENABLED));
+		
+		if (data.containsKey(Intent.CRAVEOS_NAVBAR_EXTRA_VISIBILITY))
+			mCraveStatusBarView.toggleComponentVisibility(key, data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_VISIBILITY));		
 	}
 	
 	private void removeComponent(Bundle data) {
@@ -340,6 +381,13 @@ public class CraveStatusBar extends BaseStatusBar {
 		int visibility = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_VISIBILITY, View.VISIBLE);
 		
 		mCraveStatusBarView.toggleComponentVisibility(key, visibility);
+	}
+	
+	private void toggleComponentEnable(Bundle data) {
+		String key = data.getString(Intent.CRAVEOS_NAVBAR_EXTRA_KEY); 
+		boolean enabled = data.getBoolean(Intent.CRAVEOS_NAVBAR_EXTRA_ENABLED, true);
+		
+		mCraveStatusBarView.toggleComponentEnable(key, enabled);
 	}
 	
 	public class CraveStatusBarReceiver extends BroadcastReceiver {
@@ -377,6 +425,28 @@ public class CraveStatusBar extends BaseStatusBar {
 				
 				Message msg = new Message();
 				msg.what = MSG_TOGGLE_VISIBILITY;
+				msg.setData(intent.getExtras());
+				getHandler().sendMessage(msg);
+			} else if (action.equals(Intent.CRAVEOS_NAVBAR_ACTION_RESET)) {
+				getHandler().sendEmptyMessage(MSG_RESET_NAVBAR);
+			} else if (action.equals(Intent.CRAVEOS_NAVBAR_ACTION_SET_ENABLED)) {
+				if (!intent.hasExtra(Intent.CRAVEOS_NAVBAR_EXTRA_KEY)) {
+					Slog.e(TAG, "Missing key");
+					return;
+				}
+				
+				Message msg = new Message();
+				msg.what = MSG_TOGGLE_ENABLE;
+				msg.setData(intent.getExtras());
+				getHandler().sendMessage(msg);
+			} else if (action.equals(Intent.CRAVEOS_NAVBAR_ACTION_UPDATE)) {
+				if (!intent.hasExtra(Intent.CRAVEOS_NAVBAR_EXTRA_KEY)) {
+					Slog.e(TAG, "Missing key");
+					return;
+				}
+				
+				Message msg = new Message();
+				msg.what = MSG_UPDATE_COMPONENT;
 				msg.setData(intent.getExtras());
 				getHandler().sendMessage(msg);
 			}

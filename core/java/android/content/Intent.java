@@ -638,8 +638,11 @@ public class Intent implements Parcelable, Cloneable {
 	
 	public static final String CRAVEOS_NAVBAR_ACTION_ADD = "android.crave.intent.navbar.ADD_BUTTON";
 	public static final String CRAVEOS_NAVBAR_ACTION_REMOVE = "android.crave.intent.navbar.REMOVE";
+	public static final String CRAVEOS_NAVBAR_ACTION_UPDATE = "android.crave.intent.navbar.UPDATE";
 	public static final String CRAVEOS_NAVBAR_ACTION_CLEAR = "android.crave.intent.navbar.CLEAR";
+	public static final String CRAVEOS_NAVBAR_ACTION_RESET = "android.crave.intent.navbar.RESET";
 	public static final String CRAVEOS_NAVBAR_ACTION_SET_VISIBILITY = "android.crave.intent.navbar.SET_VISIBILITY";
+	public static final String CRAVEOS_NAVBAR_ACTION_SET_ENABLED = "android.crave.intent.navbar.SET_ENABLED";
 	
 	public static final String CRAVEOS_NAVBAR_EXTRA_SIDE = "android.crave.intent.navbar.extra.SIDE";
 	public static final String CRAVEOS_NAVBAR_EXTRA_KEY	= "android.crave.intent.navbar.extra.KEY";
@@ -647,6 +650,9 @@ public class Intent implements Parcelable, Cloneable {
 	public static final String CRAVEOS_NAVBAR_EXTRA_ADD_TEXT = "android.crave.intent.navbar.extra.ADD_TEXT";
 	public static final String CRAVEOS_NAVBAR_EXTRA_ADD_ACTION = "android.crave.intent.navbar.extra.ADD_ACTION";
 	public static final String CRAVEOS_NAVBAR_EXTRA_VISIBILITY = "android.crave.intent.navbar.extra.VISIBILITY";
+	public static final String CRAVEOS_NAVBAR_EXTRA_ENABLED = "android.crave.intent.navbar.extra.ENABLED";
+	public static final String CRAVEOS_NAVBAR_EXTRA_TYPE = "android.crave.intent.navbar.extra.TYPE";
+	public static final String CRAVEOS_NAVBAR_EXTRA_PADDING = "android.crave.intent.navbar.extra.PADDING";
 	
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------

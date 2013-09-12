@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Slog;
@@ -16,32 +17,35 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 
 import com.android.systemui.R;
 import com.android.systemui.statusbar.BaseStatusBar.NavigationBarCallback;
+import com.android.systemui.statusbar.NavigationButtons;
 import com.android.systemui.statusbar.NavigationButtons.ButtonInfo;
 import com.android.systemui.statusbar.policy.BatteryController;
-import com.android.systemui.statusbar.policy.CircleBattery;
 import com.android.systemui.statusbar.policy.KeyButtonView;
 
 public class CraveStatusBarView extends FrameLayout implements NavigationBarCallback, View.OnClickListener {
 	private static final String TAG = "CraveStatusBarView";
 	private static final boolean DEBUG = true;
 	
-	private static final String HOME_STRING = "home";
-    private static final String BACK_STRING = "back";
+	private static final String HOME_STRING = "sys_home";
+    private static final String BACK_STRING = "sys_back";
+    private static final String CLOCK_STRING = "sys_clock";
+    private static final String BATTERY_STRING = "sys_battery";
+    private static final String MANAGEMENT_STRING = "sys_management";
     
-    public static final ButtonInfo HOME = new ButtonInfo(
-            R.string.navbar_home_button,
-            R.string.accessibility_home, KeyEvent.KEYCODE_HOME, R.drawable.ic_sysbar_home,
-            R.drawable.ic_sysbar_home_land, R.drawable.ic_sysbar_home, HOME_STRING);
-	public static final ButtonInfo BACK =  new ButtonInfo(
-            R.string.navbar_back_button, R.string.accessibility_back,
-            KeyEvent.KEYCODE_BACK, R.drawable.ic_sysbar_back,
-            R.drawable.ic_sysbar_back_land, R.drawable.ic_sysbar_back_side, BACK_STRING);
+    private static final int TYPE_ICON = 1;
+    private static final int TYPE_BUTTON = 2;
+    private static final int TYPE_TEXT = 3;
+    
+    private static final int POSITION_LEFT = -1;
+    private static final int POSITION_CENTER = 0;
+    private static final int POSITION_RIGHT = 1;
 	
 	public static Typeface TypefaceRegular;
 	public static Typeface TypefaceMedium;
@@ -49,17 +53,15 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 	
 	HashMap<String, ComponentContainer> mComponentMap = new HashMap<String, ComponentContainer>();
 	
-	ImageView mManagementButton;
 	LinearLayout mLeftContainer;
+	LinearLayout mCenterContainer;
 	LinearLayout mRightContainer;
 	
 	BatteryController mBatteryController;
 	
-	CraveClock mClock;
-	CraveBattery mBattery;
-	
 	class ComponentContainer {
 		View view;
+		int type;
 		int position;
 		String action;
 		boolean isCustom;
@@ -88,10 +90,8 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 			Slog.e(TAG, "Failed to load medium digital typeface");
 		
 		mLeftContainer = (LinearLayout)findViewById(R.id.leftArea);
+		mCenterContainer = (LinearLayout)findViewById(R.id.centerArea);
 		mRightContainer = (LinearLayout)findViewById(R.id.rightArea);
-		
-		mManagementButton = (ImageView)findViewById(R.id.managementButton);
-		mManagementButton.setOnClickListener(this);
 		
 		loadDefaultComponents();
 	}
@@ -99,45 +99,57 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 	private void loadDefaultComponents() {
 		// Back button
 		KeyButtonView btnBack = (KeyButtonView)findViewById(R.id.one);
-		btnBack.setInfo(BACK, false, false);
+		btnBack.setInfo(NavigationButtons.BACK, false, false);
 		ComponentContainer container = new ComponentContainer(btnBack, -1);
 		container.isCustom = false;
 		mComponentMap.put(BACK_STRING, container);
 		
 		// Home button
 		KeyButtonView btnHome = (KeyButtonView)findViewById(R.id.two);
-		btnHome.setInfo(HOME, false, false);
+		btnHome.setInfo(NavigationButtons.HOME, false, false);
+		btnHome.setSupportLongPress(false);
 		container = new ComponentContainer(btnHome, -1);
 		container.isCustom = false;
 		mComponentMap.put(HOME_STRING, container); 
 		
+		// Management button
+		ImageView sysManagementButton = (ImageView)findViewById(R.id.managementButton);
+		sysManagementButton.setOnClickListener(this);
+		container = new ComponentContainer(sysManagementButton, POSITION_CENTER);
+		container.isCustom = false;
+		mComponentMap.put(MANAGEMENT_STRING, container);
+		
 		// Crave Clock
-		mClock = (CraveClock)findViewById(R.id.craveClock); 
-		mClock.setTypeface(TypefaceDigital);
-		mClock.setTextSize(28);
+		CraveClock sysClock = (CraveClock)findViewById(R.id.craveClock); 
+		sysClock.setTypeface(TypefaceDigital);
+		sysClock.setTextSize(28);
+		container = new ComponentContainer(sysClock, POSITION_RIGHT);
+		container.isCustom = false;
+		mComponentMap.put(CLOCK_STRING, container); 
 		
 		// Crave battery
 		mBatteryController = new BatteryController(mContext);
-		
-		mBattery = (CraveBattery)findViewById(R.id.craveBattery);
-        mBatteryController.addStateChangedCallback(mBattery);
+		CraveBattery sysBattery = (CraveBattery)findViewById(R.id.craveBattery);
+        mBatteryController.addStateChangedCallback(sysBattery);
+        container = new ComponentContainer(sysBattery, POSITION_RIGHT);
+		container.isCustom = false;
+		mComponentMap.put(BATTERY_STRING, container); 
+        
 	}
 
 	@Override
 	public void setNavigationIconHints(int hints) {
-		// TODO Auto-generated method stub
-
+		// Empty
 	}
 
 	@Override
 	public void setMenuVisibility(boolean showMenu) {
 		// Empty
-
 	}
 
 	@Override
 	public void setDisabledFlags(int disabledFlags) {
-		// TODO Auto-generated method stub
+		// Empty
 	}
 
 	@Override
@@ -152,8 +164,9 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 					Slog.d(TAG, "onClick - Key: " + key);
 				
 				ComponentContainer container = mComponentMap.get(key);
-				if (container.action.length() > 0)
+				if (container.action.length() > 0) {
 					mContext.sendBroadcast(new Intent(container.action));
+				}
 			}
 		}
 	}
@@ -168,6 +181,16 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		}
 	}
 	
+	public void toggleComponentEnable(String key, boolean isEnabled) {
+		if (mComponentMap.containsKey(key)) {
+			ComponentContainer component = mComponentMap.get(key);
+			
+			if (component.view != null) {
+				component.view.setEnabled(isEnabled);
+			}
+		}
+	}
+	
 	public void clearCustomComponents() {
 		Set<Entry<String, ComponentContainer>> components = new HashSet<Entry<String,ComponentContainer>>(mComponentMap.entrySet());
 		for(Entry<String, ComponentContainer> entry : components) {
@@ -175,54 +198,110 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 			if (component.isCustom) {
 				mComponentMap.remove(entry.getKey());
 				
-				if (component.position == -1) {
+				if (component.position == POSITION_LEFT) {
 					mLeftContainer.removeView(component.view);
-				} else if (component.position == 1) {
+				} else if (component.position == POSITION_RIGHT) {
 					mRightContainer.removeView(component.view);
+				} else {
+					mCenterContainer.removeView(component.view);
 				}
 			}
 		}
 	}
 	
-	public void addComponent(String key, String text, byte[] icon, String action, int position) {
-		addComponent(key, text, icon, action, position, true);
+	public void resetNavigationBar() {
+		Set<Entry<String, ComponentContainer>> components = new HashSet<Entry<String,ComponentContainer>>(mComponentMap.entrySet());
+		for(Entry<String, ComponentContainer> entry : components) {
+			ComponentContainer component = entry.getValue();
+			if (component.isCustom) {
+				mComponentMap.remove(entry.getKey());
+				
+				if (component.position == POSITION_LEFT) {
+					mLeftContainer.removeView(component.view);
+				} else if (component.position == POSITION_RIGHT) {
+					mRightContainer.removeView(component.view);
+				} else {
+					mCenterContainer.removeView(component.view);
+				}
+			} else {
+				if (component.view.getVisibility() != View.VISIBLE) {
+					component.view.setVisibility(View.VISIBLE);
+				}
+			}
+		}
 	}
 	
-	private void addComponent(String key, String text, byte[] icon, String action, int position, boolean isCustom) {
+	public void addComponent(String key, int type, String text, byte[] icon, String action, int position, int padding) {
+		addComponent(key, type, text, icon, action, position, padding, true);
+	}
+	
+	private void addComponent(String key, int type, String text, byte[] icon, String action, int position, int padding, boolean isCustom) {
+		if (position < POSITION_LEFT || position > POSITION_RIGHT) {
+			Slog.w(TAG, "Unknown position (" + position + ").");
+			return;
+		}
+		
 		if (mComponentMap.containsKey(key)) {
-			Slog.w(TAG, "View with key (" + key + ") already exists. Igorning this component.");
+			Slog.w(TAG, "View with key (" + key + ") already exists.");
+			return;
+		}
+		
+		LinearLayout view = createContainer(key, padding, position);
+		if (type == TYPE_ICON) {
+			view.addView(createIcon(icon));
+		} else if (type == TYPE_BUTTON) {			
+			view.addView(createButton(text));
+		} else if (type == TYPE_TEXT) {
+			view.addView(createTextView(text));
+		} else {
+			Slog.w(TAG, "Unknown type ("+type+") for key " + key);
 			return;
 		}
 		
 		if (DEBUG)
-			Slog.d(TAG, "Added new icon (key=" + key + 
+			Slog.d(TAG, "Added new component (key=" + key + 
+					", type=" + type +
 					", text=" + text + 
 					", icon=" + ((icon == null) ? "null" : "available") + 
 					", action=" + action +
-					", position=" + position + ")");
-		
-		LinearLayout view = createContainer(key);
-		if (icon != null) {
-			view.addView(createIcon(icon));
-		} else {			
-			view.addView(createButton(text));
-		}
-		
+					", position=" + position + 
+					", padding=" + padding + ")");
+				
 		ComponentContainer container = new ComponentContainer(view, position);
 		container.isCustom = isCustom;
+		container.type = type;
 		
 		if (action.length() > 0) {
 			container.view.setOnClickListener(this);
 			container.action = action;
 		}
 		
-		if (position == -1)
-			mLeftContainer.addView(container.view);
-		else if (position == 1) {
+		if (position == POSITION_CENTER)
+			mCenterContainer.addView(container.view);
+		else if (position == POSITION_RIGHT) {
 			mRightContainer.addView(container.view, 0);
+		} else {
+			mLeftContainer.addView(container.view);
 		}
 		
 		mComponentMap.put(key, container);
+	}
+	
+	public void updateComponent(String key, String text, byte[] icon) {		
+		if (!mComponentMap.containsKey(key)) {
+			Slog.w(TAG, "View with key (" + key + ") does not exists.");
+			return;
+		}
+		
+		ComponentContainer container = mComponentMap.get(key);
+		
+		if (container.type == TYPE_ICON && icon != null) {
+			container.view = createIcon(icon);
+		} else if (container.type == TYPE_BUTTON && text.length() > 0) {
+			((Button)container.view).setText(text);
+		} else if (container.type == TYPE_TEXT && text.length() > 0) {
+			((TextView)container.view).setText(text);
+		}
 	}
 	
 	public void removeComponent(String key) {
@@ -232,11 +311,15 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 			
 			ComponentContainer container = mComponentMap.remove(key);
 			if (container != null) {
-				if (container.position == -1)
+				if (container.position == POSITION_LEFT)
 					mLeftContainer.removeView(container.view);
-				else if (container.position == 1)
+				else if (container.position == POSITION_RIGHT)
 					mRightContainer.removeView(container.view);
+				else
+					mCenterContainer.removeView(container.view);
 			}
+		} else {
+			Slog.v(TAG, "Component with key " + key + " doesn't exists or is not a custom component.");
 		}
 	}
 	
@@ -256,21 +339,40 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		btn.setTextSize(22);
 		btn.setBackgroundResource(R.drawable.crave_nav_button);
 		btn.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-		btn.setPadding(20, 0, 20, 0);
+		btn.setPadding(15, 0, 15, 0);
 		btn.setText(text);
 		
 		return btn;
 	}
 	
-	private LinearLayout createContainer(String key) {
+	private TextView createTextView(String text) {
+		TextView tv = new TextView(getContext());
+		tv.setTypeface(TypefaceMedium);
+		tv.setTextColor(Color.rgb(102, 102, 102));
+		tv.setTextSize(22);
+		tv.setText(text);
+		
+		return tv;
+	}
+	
+	private LinearLayout createContainer(String key, int padding, int position) {
 		LinearLayout v = new LinearLayout(getContext());
 		v.setTag(key);
 		v.setOrientation(LinearLayout.HORIZONTAL);		
-		v.setPadding(15, 0, 15, 0);
+		
 		MarginLayoutParams params = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		params.setMargins(15, 0, 15, 0);
+		
+		if (position == POSITION_LEFT || position == POSITION_CENTER) {
+			v.setPadding(padding, 0, 0, 0);
+			v.setGravity(Gravity.RIGHT);
+			params.setMargins(padding, 0, 0, 0);
+		} else {
+			v.setPadding(0, 0, padding, 0);
+			v.setGravity(Gravity.LEFT);
+			params.setMargins(0, 0, padding, 0);
+		}		
+		
 		v.setLayoutParams(params);
-		v.setGravity(Gravity.CENTER);
 		
 		return v;
 	}

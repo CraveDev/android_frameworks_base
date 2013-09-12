@@ -175,6 +175,10 @@ public class KeyButtonView extends ImageView {
             ((View)getParent().getParent()).invalidate();
         }
     }
+    
+    public void setSupportLongPress(boolean supportLongPress) {
+    	mSupportsLongPress = supportLongPress;
+    }
 
     public void setPressed(boolean pressed) {
         if (mGlowBG != null) {

@@ -313,9 +313,9 @@ final class UiModeManagerService extends IUiModeManager.Stub {
         int uiMode = mTelevision ? Configuration.UI_MODE_TYPE_TELEVISION : mDefaultUiModeType;
         if (mCarModeEnabled) {
             uiMode = Configuration.UI_MODE_TYPE_CAR;
-        } else if (isDeskDockState(mDockState)) {
+        } /*else if (isDeskDockState(mDockState)) {
             uiMode = Configuration.UI_MODE_TYPE_DESK;
-        }
+        }*/
         if (mCarModeEnabled) {
             if (mNightMode == UiModeManager.MODE_NIGHT_AUTO) {
                 updateComputedNightModeLocked();

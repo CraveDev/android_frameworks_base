@@ -390,6 +390,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     // Behavior of volbtn music controls
     boolean mVolBtnMusicControls;
     boolean mIsLongPress;
+    
+    boolean mIsKioskMode = false;
 
     private static final class PointerLocationInputEventReceiver extends InputEventReceiver {
         private final PointerLocationView mView;
@@ -3988,6 +3990,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_VOLUME_MUTE: {
+            	if (mIsKioskMode) {
+            		result &= ~ACTION_PASS_TO_USER;
+            		break;
+            	}
                 if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
                     if (down) {
                         if (isScreenOn && !mVolumeDownKeyTriggered
@@ -4096,6 +4102,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 }
                 result &= ~ACTION_PASS_TO_USER;
                 if (down) {
+                	if (mIsKioskMode) {
+                		mContext.sendBroadcastAsUser(new Intent(Intent.CRAVEOS_ACTION_POWER_SHORT_PRESS), UserHandle.ALL);
+                		break;
+                	}
+                	
                     if (isScreenOn && !mPowerKeyTriggered
                             && (event.getFlags() & KeyEvent.FLAG_FALLBACK) == 0) {
                         mPowerKeyTriggered = true;
@@ -5292,8 +5303,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 			Slog.i(TAG, "CraveKioskModeReceiver: " + action);
 			if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_START)) {
 				mLongPressOnPowerBehavior = LONG_PRESS_POWER_CRAVE_INTENT;
+				mIsKioskMode = true;
 			} else if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP)) {
 				mLongPressOnPowerBehavior = LONG_PRESS_POWER_GLOBAL_ACTIONS;
+				mIsKioskMode = false;
 			}
 		}
 	};
