@@ -18,7 +18,9 @@ package com.android.server;
 
 import com.android.server.am.ActivityManagerService;
 import com.android.server.power.PowerManagerService;
+import com.android.settings.applications.InstalledAppDetails.ClearUserDataObserver;
 
+import android.app.ActivityManager;
 import android.app.ActivityManagerNative;
 import android.app.AlarmManager;
 import android.app.IActivityManager;
@@ -226,8 +228,19 @@ public class Watchdog extends Thread {
 				toggleAdbWifi(false);
 			} else if (action.equals(Intent.CRAVEOS_ACTION_SET_LOCALE)) {
 				setLocale(intent);
-			}
-			else {
+			} else if (action.equals(Intent.CRAVEOS_ACTION_CLEAR_USERDATA)) {
+				String packageName = intent.getStringExtra(Intent.CRAVEOS_EXTRA_CLEAR_PACKAGENAME);
+				if (packageName == null)
+					packageName = "";
+				
+				clearAppUserData(packageName);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_CLEAR_CACHE)) {
+				String packageName = intent.getStringExtra(Intent.CRAVEOS_EXTRA_CLEAR_PACKAGENAME);
+				if (packageName == null)
+					packageName = "";
+				
+				clearAppCache(packageName);
+			} else {
 				Slog.w(TAG, "CraveOS - Received unknown intent: " + action);
 			}
 		}
@@ -565,6 +578,32 @@ public class Watchdog extends Thread {
 	        }
     	} else {
     		Slog.w(TAG, "setLocale - No language specifed in Intent");
+    	}
+    }
+    
+    void clearAppUserData(String packageName) {
+    	if (packageName.isEmpty()) {
+    		Slog.w(TAG, "clearAppUserData - packageName is not specified!");
+    	} else {
+    		ActivityManager am = (ActivityManager)mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        	boolean res = am.clearApplicationUserData(packageName, null);
+        	
+        	if (res) {
+        		Slog.i(TAG, "clearAppUserData - Cleared userdata for package: " + packageName);
+        	} else {
+        		Slog.w(TAG, "clearAppUserData - Failed to clear userdata for package: " + packageName);
+        	}
+    	}
+    }
+    
+    void clearAppCache(String packageName) {
+    	if (packageName.isEmpty()) {
+    		Slog.w(TAG, "clearAppCache - packageName is not specified!");
+    	} else {
+    		PackageManager pm = mContext.getPackageManager();
+    		pm.deleteApplicationCacheFiles(packageName, null);
+
+    		Slog.i(TAG, "clearAppCache - Cleared cache for package: " + packageName);
     	}
     }
 

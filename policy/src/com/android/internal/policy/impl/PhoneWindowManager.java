@@ -392,6 +392,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     boolean mIsLongPress;
     
     boolean mIsKioskMode = false;
+    String mKioskModeHome = "";
+    Intent mOldHomeIntent = null;
 
     private static final class PointerLocationInputEventReceiver extends InputEventReceiver {
         private final PointerLocationView mView;
@@ -1196,6 +1198,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 		filter = new IntentFilter();
 		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_START);
 		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP);
+		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_HOME);
 		context.registerReceiver(mCraveKioskModeReceiver, filter);
 
         mVibrator = (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
@@ -5064,7 +5067,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             } catch (ActivityNotFoundException e) {
             }
         }
-        mContext.startActivityAsUser(mHomeIntent, UserHandle.CURRENT);
+
+       	mContext.startActivityAsUser(mHomeIntent, UserHandle.CURRENT);
     }
     
     /**
@@ -5307,6 +5311,25 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 			} else if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP)) {
 				mLongPressOnPowerBehavior = LONG_PRESS_POWER_GLOBAL_ACTIONS;
 				mIsKioskMode = false;
+				
+				// Put HomeIntent back to the old one
+				if (mOldHomeIntent != null) {
+					mHomeIntent = mOldHomeIntent;
+					mOldHomeIntent = null;
+				}
+			} else if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_HOME)) {
+				mKioskModeHome = intent.getStringExtra(Intent.CRAEVOS_EXTRA_KIOSKMODE_HOME_PACKAGE);
+				if (mKioskModeHome == null) {
+					mKioskModeHome = "";
+				} else if (!mKioskModeHome.isEmpty()) {
+					if (mOldHomeIntent == null) {
+						mOldHomeIntent = mHomeIntent;
+					}
+					
+					mHomeIntent = new Intent(Intent.ACTION_MAIN);
+					mHomeIntent.setComponent(ComponentName.unflattenFromString(mKioskModeHome));
+					mHomeIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NEW_TASK);
+				}
 			}
 		}
 	};
