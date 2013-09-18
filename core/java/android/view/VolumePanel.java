@@ -37,6 +37,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
@@ -357,6 +358,16 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
 
         mMoreButton.setOnClickListener(this);
         listenToRingerMode();
+        monitorKioskMode();
+        
+        if (SystemProperties.getBoolean("CRAVE_KIOSKMODE", false)) {
+        	mMoreButton.setVisibility(View.GONE);
+            for (int i = 0; i < STREAMS.length; i++) {
+                StreamResources streamRes = STREAMS[i];
+                StreamControl sc = mStreamControls.get(streamRes.streamType);
+                sc.icon.setOnClickListener(null);
+        	}
+        }
     }
 
     private void listenToRingerMode() {
@@ -370,6 +381,34 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
                 if (AudioManager.RINGER_MODE_CHANGED_ACTION.equals(action)) {
                     removeMessages(MSG_RINGER_MODE_CHANGED);
                     sendMessage(obtainMessage(MSG_RINGER_MODE_CHANGED));
+                }
+            }
+        }, filter);
+    }
+    
+    private void monitorKioskMode() {
+    	final IntentFilter filter = new IntentFilter();
+    	filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_START);
+    	filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP);
+    	
+    	mContext.registerReceiver(new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+
+                if (Intent.CRAVEOS_ACTION_KIOSKMODE_START.equals(action)) {
+                    mMoreButton.setVisibility(View.GONE);
+                    for (int i = 0; i < STREAMS.length; i++) {
+                        StreamResources streamRes = STREAMS[i];
+                        StreamControl sc = mStreamControls.get(streamRes.streamType);
+                        sc.icon.setOnClickListener(null);
+                	}
+                } else if (Intent.CRAVEOS_ACTION_KIOSKMODE_STOP.equals(action)) {
+                	mMoreButton.setVisibility(View.VISIBLE);
+                	for (int i = 0; i < STREAMS.length; i++) {
+                        StreamResources streamRes = STREAMS[i];                        
+                        StreamControl sc = mStreamControls.get(streamRes.streamType);
+                        sc.icon.setOnClickListener(VolumePanel.this);
+                	}
                 }
             }
         }, filter);

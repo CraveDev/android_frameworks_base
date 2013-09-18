@@ -1169,6 +1169,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         mHasMenuKey = ((mDeviceHardwareKeys & KEY_MASK_MENU) != 0);
         mHasAssistKey = ((mDeviceHardwareKeys & KEY_MASK_ASSIST) != 0);
         mHasAppSwitchKey = ((mDeviceHardwareKeys & KEY_MASK_APP_SWITCH) != 0);
+        mIsKioskMode = SystemProperties.getBoolean("CRAVE_KIOSKMODE", false);
 
         // register for dock events
         IntentFilter filter = new IntentFilter();
@@ -3993,10 +3994,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_VOLUME_MUTE: {
-            	if (mIsKioskMode) {
-            		result &= ~ACTION_PASS_TO_USER;
-            		break;
-            	}
                 if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
                     if (down) {
                         if (isScreenOn && !mVolumeDownKeyTriggered
@@ -5308,10 +5305,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 			if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_START)) {
 				mLongPressOnPowerBehavior = LONG_PRESS_POWER_CRAVE_INTENT;
 				mIsKioskMode = true;
+				SystemProperties.set("CRAVE_KIOSKMODE", String.valueOf(true));
 			} else if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP)) {
 				mLongPressOnPowerBehavior = LONG_PRESS_POWER_GLOBAL_ACTIONS;
 				mIsKioskMode = false;
-				
+				SystemProperties.set("CRAVE_KIOSKMODE", String.valueOf(false));
 				// Put HomeIntent back to the old one
 				if (mOldHomeIntent != null) {
 					mHomeIntent = mOldHomeIntent;

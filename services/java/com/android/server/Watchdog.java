@@ -18,7 +18,6 @@ package com.android.server;
 
 import com.android.server.am.ActivityManagerService;
 import com.android.server.power.PowerManagerService;
-import com.android.settings.applications.InstalledAppDetails.ClearUserDataObserver;
 
 import android.app.ActivityManager;
 import android.app.ActivityManagerNative;
@@ -27,6 +26,7 @@ import android.app.IActivityManager;
 import android.app.PendingIntent;
 import android.app.backup.BackupManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -314,6 +314,8 @@ public class Watchdog extends Thread {
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_WIFI_ENABLE);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_WIFI_DISABLE);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_LOCALE);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_CLEAR_USERDATA);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_CLEAR_CACHE);
         context.registerReceiver(new CraveIntentReceiver(), craveIntentFilter);
         
         mBootTime = System.currentTimeMillis();

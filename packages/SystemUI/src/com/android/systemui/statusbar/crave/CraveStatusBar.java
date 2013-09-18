@@ -44,6 +44,7 @@ public class CraveStatusBar extends BaseStatusBar {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_ADD);
 		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_REMOVE);
+		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_UPDATE);
 		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_CLEAR);
 		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_SET_VISIBILITY);
 		filter.addAction(Intent.CRAVEOS_NAVBAR_ACTION_SET_ENABLED);
@@ -331,20 +332,16 @@ public class CraveStatusBar extends BaseStatusBar {
 		}
 		
 		int type = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_TYPE, 2); // Default = button
-		int side = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_SIDE, -1);
 		
-		int padding = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_PADDING, 15);
-		
-		mCraveStatusBarView.addComponent(key, type, text, icon, action, side, padding);
-		
-		boolean isEnabled = data.getBoolean(Intent.CRAVEOS_NAVBAR_EXTRA_ENABLED, true);
-		int visibility = data.getInt(Intent.CRAVEOS_NAVBAR_EXTRA_VISIBILITY, View.VISIBLE);
-		
-		if (!isEnabled)
-			mCraveStatusBarView.toggleComponentEnable(key, isEnabled);
-		
-		if (visibility != View.VISIBLE)
-			mCraveStatusBarView.toggleComponentVisibility(key, visibility);
+		Bundle containerBundle = data.getBundle(Intent.CRAVEOS_NAVBAR_EXTRA_CONTAINER);
+		CraveContainer container;
+		if (containerBundle == null) {
+			container = new CraveContainer();
+		} else {
+			container = new CraveContainer(containerBundle);
+		}
+			
+		mCraveStatusBarView.addComponent(key, type, text, icon, action, container);
 	}
 	
 	private void updateComponent(Bundle data) {
@@ -394,6 +391,8 @@ public class CraveStatusBar extends BaseStatusBar {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
+			
+			Slog.v(TAG, "CraveStatusBar - action=" + action);
 			
 			if (action.equals(Intent.CRAVEOS_NAVBAR_ACTION_ADD)) {
 				if (!intent.hasExtra(Intent.CRAVEOS_NAVBAR_EXTRA_KEY)) {

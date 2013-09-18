@@ -660,6 +660,7 @@ public class Intent implements Parcelable, Cloneable {
 	public static final String CRAVEOS_NAVBAR_EXTRA_ENABLED = "android.crave.intent.navbar.extra.ENABLED";
 	public static final String CRAVEOS_NAVBAR_EXTRA_TYPE = "android.crave.intent.navbar.extra.TYPE";
 	public static final String CRAVEOS_NAVBAR_EXTRA_PADDING = "android.crave.intent.navbar.extra.PADDING";
+	public static final String CRAVEOS_NAVBAR_EXTRA_CONTAINER = "android.crave.intent.navbar.extra.CONTAINER";
 	
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------

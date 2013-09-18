@@ -63,7 +63,7 @@ public class Clock extends TextView implements OnClickListener, OnLongClickListe
     private static final int AM_PM_STYLE_SMALL   = 1;
     private static final int AM_PM_STYLE_GONE    = 2;
 
-    private int mAmPmStyle = AM_PM_STYLE_GONE;
+    private int mAmPmStyle = AM_PM_STYLE_NORMAL;
 
     Handler mHandler;
 
@@ -258,7 +258,7 @@ public class Clock extends TextView implements OnClickListener, OnLongClickListe
 
     public void updateSettings() {
         int amPmStyle = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.STATUS_BAR_AM_PM, 2, UserHandle.USER_CURRENT);
+                Settings.System.STATUS_BAR_AM_PM, AM_PM_STYLE_NORMAL, UserHandle.USER_CURRENT);
 
         if (mAmPmStyle != amPmStyle) {
             mAmPmStyle = amPmStyle;

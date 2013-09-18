@@ -9,29 +9,28 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Slog;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.View;
 
 import com.android.systemui.R;
 import com.android.systemui.statusbar.BaseStatusBar.NavigationBarCallback;
+import com.android.systemui.statusbar.BaseStatusBar;
 import com.android.systemui.statusbar.NavigationButtons;
-import com.android.systemui.statusbar.NavigationButtons.ButtonInfo;
 import com.android.systemui.statusbar.policy.BatteryController;
 import com.android.systemui.statusbar.policy.KeyButtonView;
 
 public class CraveStatusBarView extends FrameLayout implements NavigationBarCallback, View.OnClickListener {
 	private static final String TAG = "CraveStatusBarView";
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = BaseStatusBar.DEBUG;
 	
 	private static final String HOME_STRING = "sys_home";
     private static final String BACK_STRING = "sys_back";
@@ -231,11 +230,12 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		}
 	}
 	
-	public void addComponent(String key, int type, String text, byte[] icon, String action, int position, int padding) {
-		addComponent(key, type, text, icon, action, position, padding, true);
+	public void addComponent(String key, int type, String text, byte[] icon, String action, CraveContainer craveContainer) {
+		addComponent(key, type, text, icon, action, craveContainer, true);
 	}
 	
-	private void addComponent(String key, int type, String text, byte[] icon, String action, int position, int padding, boolean isCustom) {
+	private void addComponent(String key, int type, String text, byte[] icon, String action, CraveContainer craveContainer, boolean isCustom) {
+		int position = craveContainer.getPosition();
 		if (position < POSITION_LEFT || position > POSITION_RIGHT) {
 			Slog.w(TAG, "Unknown position (" + position + ").");
 			return;
@@ -246,30 +246,31 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 			return;
 		}
 		
-		LinearLayout view = createContainer(key, padding, position);
+		LinearLayout view = createContainer(key, craveContainer.getMarginLeft(), craveContainer.getMarginRight(), position);
 		if (type == TYPE_ICON) {
 			view.addView(createIcon(icon));
 		} else if (type == TYPE_BUTTON) {			
 			view.addView(createButton(text));
 		} else if (type == TYPE_TEXT) {
-			view.addView(createTextView(text));
+			view.addView(createTextView(text, craveContainer.getTextColor(), craveContainer.getTextSize()));
 		} else {
 			Slog.w(TAG, "Unknown type ("+type+") for key " + key);
 			return;
 		}
 		
-		if (DEBUG)
-			Slog.d(TAG, "Added new component (key=" + key + 
-					", type=" + type +
-					", text=" + text + 
-					", icon=" + ((icon == null) ? "null" : "available") + 
-					", action=" + action +
-					", position=" + position + 
-					", padding=" + padding + ")");
+		Slog.v(TAG, "Added new component (key=" + key + 
+				", type=" + type +
+				", text=" + text + 
+				", icon=" + ((icon == null) ? "null" : "available") + 
+				", action=" + action +
+				", position=" + position + 
+				", craveContainer=" + craveContainer.toString() + ")");
 				
 		ComponentContainer container = new ComponentContainer(view, position);
 		container.isCustom = isCustom;
 		container.type = type;
+		container.view.setEnabled(craveContainer.getEnabled());
+		container.view.setVisibility(craveContainer.getVisibility());
 		
 		if (action.length() > 0) {
 			container.view.setOnClickListener(this);
@@ -294,13 +295,15 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		}
 		
 		ComponentContainer container = mComponentMap.get(key);
+		LinearLayout layout = (LinearLayout)container.view;
 		
 		if (container.type == TYPE_ICON && icon != null) {
-			container.view = createIcon(icon);
+			layout.removeAllViews();
+			layout.addView(createIcon(icon));
 		} else if (container.type == TYPE_BUTTON && text.length() > 0) {
-			((Button)container.view).setText(text);
+			((Button)layout.getChildAt(0)).setText(text);
 		} else if (container.type == TYPE_TEXT && text.length() > 0) {
-			((TextView)container.view).setText(text);
+			((TextView)layout.getChildAt(0)).setText(text);
 		}
 	}
 	
@@ -327,7 +330,8 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		Bitmap bmp = BitmapFactory.decodeByteArray(icon, 0, icon.length);
 		ImageView img = new ImageView(getContext());
 		img.setImageBitmap(bmp);
-		img.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+		img.setScaleType(ScaleType.CENTER_INSIDE);
+		img.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
 		
 		return img;
 	}
@@ -345,34 +349,31 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		return btn;
 	}
 	
-	private TextView createTextView(String text) {
+	private TextView createTextView(String text, int color, int size) {
 		TextView tv = new TextView(getContext());
 		tv.setTypeface(TypefaceMedium);
-		tv.setTextColor(Color.rgb(102, 102, 102));
-		tv.setTextSize(22);
+		tv.setTextColor(color);
+		tv.setTextSize(size);
 		tv.setText(text);
 		
 		return tv;
 	}
 	
-	private LinearLayout createContainer(String key, int padding, int position) {
+	private LinearLayout createContainer(String key, int paddingLeft, int paddingRight, int position) {
 		LinearLayout v = new LinearLayout(getContext());
 		v.setTag(key);
 		v.setOrientation(LinearLayout.HORIZONTAL);		
+		v.setPadding(paddingLeft, 0, paddingRight, 0);
 		
-		MarginLayoutParams params = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		MarginLayoutParams params = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+		params.setMargins(paddingLeft, 0, paddingRight, 0);
+		v.setLayoutParams(params);
 		
 		if (position == POSITION_LEFT || position == POSITION_CENTER) {
-			v.setPadding(padding, 0, 0, 0);
-			v.setGravity(Gravity.RIGHT);
-			params.setMargins(padding, 0, 0, 0);
+			v.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
 		} else {
-			v.setPadding(0, 0, padding, 0);
-			v.setGravity(Gravity.LEFT);
-			params.setMargins(0, 0, padding, 0);
-		}		
-		
-		v.setLayoutParams(params);
+			v.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL);
+		}
 		
 		return v;
 	}
