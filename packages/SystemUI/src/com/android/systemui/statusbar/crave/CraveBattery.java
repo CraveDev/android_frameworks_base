@@ -35,7 +35,7 @@ public class CraveBattery extends ImageView implements BatteryController.Battery
         updateTile();
     }
     
-    private synchronized void updateTile() {        
+    private synchronized void updateTile() {
         setImageLevel(mBatteryLevel);
         
         if (mChargeAnimation != null) {
@@ -45,6 +45,7 @@ public class CraveBattery extends ImageView implements BatteryController.Battery
         
         if (mBatteryStatus == BatteryManager.BATTERY_STATUS_CHARGING) {
         	setImageDrawable(mContext.getResources().getDrawable(R.drawable.crave_battery_charging));
+        	setImageLevel(mBatteryLevel);
         	
         	LevelListDrawable chargeAnimList = (LevelListDrawable)getDrawable();
 	        mChargeAnimation = (AnimationDrawable)chargeAnimList.getCurrent();

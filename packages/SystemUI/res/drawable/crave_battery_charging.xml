@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <level-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:maxLevel="15">
+    <item android:minLevel="0" android:maxLevel="15">
 		<animation-list android:oneshot="false" xmlns:android="http://schemas.android.com/apk/res/android">
 		    <item android:drawable="@drawable/crave_stat_sys_battery_charge_anim0" android:duration="800" />
 		    <item android:drawable="@drawable/crave_stat_sys_battery_charge_anim15" android:duration="800" />
