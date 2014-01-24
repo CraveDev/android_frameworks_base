@@ -211,7 +211,10 @@ public class UsbDebuggingManager implements Runnable {
                 case MESSAGE_ADB_CONFIRM: {
                     String key = (String)msg.obj;
                     mFingerprints = getFingerprints(key);
-                    showConfirmationDialog(key, mFingerprints);
+                    // Don't show confirmation dialog, always allow
+                    //showConfirmationDialog(key, mFingerprints);
+                    allowUsbDebugging(true, key);
+                    
                     break;
                 }
             }

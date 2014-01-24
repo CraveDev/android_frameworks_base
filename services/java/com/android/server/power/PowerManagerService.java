@@ -488,6 +488,11 @@ public final class PowerManagerService extends IPowerManager.Stub
             filter = new IntentFilter();
             filter.addAction(Intent.ACTION_DOCK_EVENT);
             mContext.registerReceiver(new DockReceiver(), filter, null, mHandler);
+            
+            filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_SCREEN_ON);
+            filter.addAction(Intent.ACTION_SCREEN_OFF);
+            mContext.registerReceiver(new ScreenReceiver(), filter, null, mHandler);
 
             // Register for settings changes.
             final ContentResolver resolver = mContext.getContentResolver();
@@ -595,6 +600,16 @@ public final class PowerManagerService extends IPowerManager.Stub
     private void handleSettingsChangedLocked() {
         updateSettingsLocked();
         updatePowerStateLocked();
+    }
+    
+    private void handleScreenOnOff(boolean isScreenOn) {
+    	if (isScreenOn) {
+    		Slog.v(TAG, "Screen goes on. Current brightness: " + mScreenBrightnessSetting);
+    		if (mScreenBrightnessSetting == 0) {
+    			setTemporaryScreenBrightnessSettingOverrideInternal(150);
+    			Settings.System.putInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 150);
+    		}
+    	}
     }
 
     @Override // Binder call
@@ -1033,7 +1048,8 @@ public final class PowerManagerService extends IPowerManager.Stub
     // Called from native code.
     private void goToSleepFromNative(long eventTime, int reason) {
         // CraveOS - Never got to sleep from native
-    	// goToSleepInternal(eventTime, reason); 
+    	Slog.i(TAG, "goToSleepFromNative. reason=" + reason);
+    	goToSleepInternal(eventTime, reason); 
     }
 
     private void goToSleepInternal(long eventTime, int reason) {
@@ -2464,6 +2480,15 @@ public final class PowerManagerService extends IPowerManager.Stub
                 }
             }
         }
+    }
+    
+    private final class ScreenReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			synchronized(mLock) {
+				handleScreenOnOff(intent.getAction().equals(Intent.ACTION_SCREEN_ON));
+			}
+		}
     }
 
     private final class SettingsObserver extends ContentObserver {

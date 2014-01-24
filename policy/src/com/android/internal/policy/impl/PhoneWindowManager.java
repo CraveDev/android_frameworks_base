@@ -392,6 +392,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     boolean mIsLongPress;
     
     boolean mIsKioskMode = false;
+    boolean mCanTurnScreenOff = false;
     String mKioskModeHome = "";
     Intent mOldHomeIntent = null;
 
@@ -1200,6 +1201,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_START);
 		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP);
 		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_HOME);
+		filter.addAction(Intent.CRAVEOS_SETTING_CAN_TURN_SCREEN_OFF);
 		context.registerReceiver(mCraveKioskModeReceiver, filter);
 
         mVibrator = (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
@@ -4101,10 +4103,23 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     return result;
                 }
                 result &= ~ACTION_PASS_TO_USER;
+                
+                Slog.v(TAG, "Power pressed. (down=" + down + 
+            			", isScreenOn=" + isScreenOn +
+            			", mIsKioskMode=" + mIsKioskMode + 
+            			", mCanTurnScreenOff=" + mCanTurnScreenOff + 
+            			", isFunctionPressed=" + event.isFunctionPressed() + ")");
+            	
                 if (down) {
-                	if (mIsKioskMode) {
-                		mContext.sendBroadcastAsUser(new Intent(Intent.CRAVEOS_ACTION_POWER_SHORT_PRESS), UserHandle.ALL);
-                		break;
+                	// FunctionPressed flag is set when TURN_SCREEN_OFF intent is received in Watchdog,
+                	// just so we know when the actual button is pressed and when the intent is used
+                	if (!event.isFunctionPressed() && mIsKioskMode && !mCanTurnScreenOff) {
+                		if (isScreenOn) {
+                			mContext.sendBroadcastAsUser(new Intent(Intent.CRAVEOS_ACTION_POWER_SHORT_PRESS), UserHandle.ALL);
+                		
+                			Slog.v(TAG, "Power pressed. Break");
+               				break;
+                		}
                 	}
                 	
                     if (isScreenOn && !mPowerKeyTriggered
@@ -5328,6 +5343,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 					mHomeIntent.setComponent(ComponentName.unflattenFromString(mKioskModeHome));
 					mHomeIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NEW_TASK);
 				}
+			} else if (action.equals(Intent.CRAVEOS_SETTING_CAN_TURN_SCREEN_OFF)) {
+				mCanTurnScreenOff = intent.getBooleanExtra("value", false);
 			}
 		}
 	};

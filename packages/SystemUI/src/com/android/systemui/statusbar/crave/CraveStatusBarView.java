@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Slog;
@@ -121,7 +122,8 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		// Crave Clock
 		CraveClock sysClock = (CraveClock)findViewById(R.id.craveClock); 
 		sysClock.setTypeface(TypefaceDigital);
-		sysClock.setTextSize(28);
+		sysClock.setTextSize(22);
+		sysClock.setTextColor(Color.rgb(102, 102, 102));
 		container = new ComponentContainer(sysClock, POSITION_RIGHT);
 		container.isCustom = false;
 		mComponentMap.put(CLOCK_STRING, container); 

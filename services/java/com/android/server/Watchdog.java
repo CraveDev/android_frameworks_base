@@ -34,6 +34,7 @@ import android.content.IntentFilter;
 import android.content.pm.IPackageInstallObserver;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.hardware.input.InputManager;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Debug;
@@ -52,6 +53,8 @@ import android.provider.Settings;
 import android.util.EventLog;
 import android.util.Log;
 import android.util.Slog;
+import android.view.IWindowManager;
+import android.view.KeyEvent;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -196,6 +199,8 @@ public class Watchdog extends Thread {
 			String action = intent.getAction();
 			if (action.equals(Intent.CRAVEOS_ACTION_SET_BACKLIGHT)) {
 				setBacklight(intent);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_TURN_SCREEN_ONOFF)) {
+				turnScreenOnOff();
 			} else if (action.equals(Intent.CRAVEOS_ACTION_REBOOT)) {
 				PowerManagerService pms = (PowerManagerService)ServiceManager.getService("power");
 				pms.reboot(false, "CraveOS reboot initiated", false);
@@ -305,6 +310,7 @@ public class Watchdog extends Thread {
 
         IntentFilter craveIntentFilter = new IntentFilter();
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_BACKLIGHT);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_TURN_SCREEN_ONOFF);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_REBOOT);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SHUTDOWN);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_INSTALL_APK);
@@ -501,6 +507,22 @@ public class Watchdog extends Thread {
     	} else {
     		Slog.w(TAG, "setBacklight, missing brightness extra");
     	}
+    }
+    
+    void turnScreenOnOff() {
+    	Slog.i(TAG, "Watchdog - TurnScreenOff");
+    	
+    	try {
+    		long now = SystemClock.uptimeMillis();
+    		KeyEvent down = new KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_POWER, 0, KeyEvent.META_FUNCTION_ON);
+    		InputManager.getInstance().injectInputEvent(down, InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
+    		
+    		now = SystemClock.uptimeMillis();
+    		KeyEvent up = new KeyEvent(now+1, now+1, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_POWER, 0);
+    		InputManager.getInstance().injectInputEvent(up, InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
+        } catch (Exception doe) {
+        	Slog.w(TAG, "Exception: " + doe.getMessage());
+        }
     }
     
     void setDeviceDateTime(Intent intent) {

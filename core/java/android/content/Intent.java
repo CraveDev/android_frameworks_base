@@ -600,6 +600,10 @@ public class Intent implements Parcelable, Cloneable {
     // CraveOS intents
 	
 	public static final String CRAVEOS_ACTION_SET_BACKLIGHT = "android.crave.intent.SET_BACKLIGHT";
+	public static final String CRAVEOS_ACTION_TURN_SCREEN_ONOFF = "android.crave.intent.TURN_SCREEN_ONOFF";
+	
+	public static final String CRAVEOS_SETTING_CAN_TURN_SCREEN_OFF = "android.crave.setting.CAN_TURN_SCREEN_OFF";
+	
 	public static final String CRAVEOS_ACTION_REBOOT = "android.crave.intent.REBOOT";
 	public static final String CRAVEOS_ACTION_SHUTDOWN = "android.crave.intent.SHUTDOWN";
 	public static final String CRAVEOS_ACTION_STATUSBAR_SHOW = "com.samsung.kiosk.StatusBarVisible";
