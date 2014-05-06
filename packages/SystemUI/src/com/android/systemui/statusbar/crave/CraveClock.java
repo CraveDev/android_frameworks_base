@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.os.Handler;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.text.Spannable;
@@ -15,6 +16,7 @@ import android.text.format.DateFormat;
 import android.text.style.CharacterStyle;
 import android.text.style.RelativeSizeSpan;
 import android.util.AttributeSet;
+import android.util.Slog;
 import android.view.View;
 import android.widget.TextView;
 
@@ -29,6 +31,8 @@ import java.util.TimeZone;
  * Digital clock for the status bar.
  */
 public class CraveClock extends TextView {
+	private static final String TAG = "CraveClock";
+	
     private boolean mAttached;
     private Calendar mCalendar;
     private String mClockFormatString;
@@ -93,7 +97,7 @@ public class CraveClock extends TextView {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-
+        
         if (!mAttached) {
             mAttached = true;
             IntentFilter filter = new IntentFilter();
@@ -113,6 +117,10 @@ public class CraveClock extends TextView {
 
         // The time zone may have changed while the receiver wasn't registered, so update the Time
         mCalendar = Calendar.getInstance(TimeZone.getDefault());
+        
+        if (mClockFormat != null) {
+            mClockFormat.setTimeZone(mCalendar.getTimeZone());
+        }
 
         // Make sure we update to the current time
         updateClock();
@@ -138,9 +146,10 @@ public class CraveClock extends TextView {
                 if (mClockFormat != null) {
                     mClockFormat.setTimeZone(mCalendar.getTimeZone());
                 }
+                Slog.i(TAG, "Timezone changed: " + tz);
             } else if (action.equals(Intent.ACTION_CONFIGURATION_CHANGED)) {
                 final Locale newLocale = getResources().getConfiguration().locale;
-                if (! newLocale.equals(mLocale)) {
+                if (!newLocale.equals(mLocale)) {
                     mLocale = newLocale;
                     mClockFormatString = ""; // force refresh
                 }

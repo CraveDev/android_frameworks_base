@@ -605,10 +605,10 @@ public final class PowerManagerService extends IPowerManager.Stub
     private void handleScreenOnOff(boolean isScreenOn) {
     	if (isScreenOn) {
     		Slog.v(TAG, "Screen goes on. Current brightness: " + mScreenBrightnessSetting);
-    		if (mScreenBrightnessSetting == 0) {
+    		/*if (mScreenBrightnessSetting == 0) {
     			setTemporaryScreenBrightnessSettingOverrideInternal(150);
     			Settings.System.putInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 150);
-    		}
+    		}*/
     	}
     }
 

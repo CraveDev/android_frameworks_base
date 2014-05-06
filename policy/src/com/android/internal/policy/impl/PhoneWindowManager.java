@@ -4101,27 +4101,27 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 if ((mTopFullscreenOpaqueWindowState.getAttrs().flags
                         & WindowManager.LayoutParams.PREVENT_POWER_KEY) != 0){
                     return result;
-                }
-                result &= ~ACTION_PASS_TO_USER;
+                } 
                 
                 Slog.v(TAG, "Power pressed. (down=" + down + 
             			", isScreenOn=" + isScreenOn +
             			", mIsKioskMode=" + mIsKioskMode + 
             			", mCanTurnScreenOff=" + mCanTurnScreenOff + 
             			", isFunctionPressed=" + event.isFunctionPressed() + ")");
+                
+                result &= ~ACTION_PASS_TO_USER;
+                
+            	// isFunctionPressed flag is set when TURN_SCREEN_OFF intent is received in Watchdog,
+            	// just so we know when the actual button is pressed and when the intent is used
+                if (mIsKioskMode && !mCanTurnScreenOff && !event.isFunctionPressed()) {
+                	if (isScreenOn && down) {
+            			mContext.sendBroadcastAsUser(new Intent(Intent.CRAVEOS_ACTION_POWER_SHORT_PRESS), UserHandle.ALL);
+            		}
+                	Slog.v(TAG, "Power pressed. Break");
+       				return result;
+                }
             	
-                if (down) {
-                	// FunctionPressed flag is set when TURN_SCREEN_OFF intent is received in Watchdog,
-                	// just so we know when the actual button is pressed and when the intent is used
-                	if (!event.isFunctionPressed() && mIsKioskMode && !mCanTurnScreenOff) {
-                		if (isScreenOn) {
-                			mContext.sendBroadcastAsUser(new Intent(Intent.CRAVEOS_ACTION_POWER_SHORT_PRESS), UserHandle.ALL);
-                		
-                			Slog.v(TAG, "Power pressed. Break");
-               				break;
-                		}
-                	}
-                	
+                if (down) {                	
                     if (isScreenOn && !mPowerKeyTriggered
                             && (event.getFlags() & KeyEvent.FLAG_FALLBACK) == 0) {
                         mPowerKeyTriggered = true;

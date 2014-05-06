@@ -61,6 +61,7 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 	
 	class ComponentContainer {
 		View view;
+		View subView;
 		int type;
 		int position;
 		String action;
@@ -137,6 +138,12 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		mComponentMap.put(BATTERY_STRING, container); 
         
 	}
+	
+	public void updateDefaultComponents()
+	{
+		CraveClock sysClock = (CraveClock)mComponentMap.get(CLOCK_STRING).view;
+		sysClock.updateSettings();
+	}
 
 	@Override
 	public void setNavigationIconHints(int hints) {
@@ -155,14 +162,14 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 
 	@Override
 	public void onClick(View v) {
+		Slog.i(TAG, "onClick - id=" + v.getId() + ", tag=" + v.getTag());
 		if (v.getId() == R.id.managementButton) {
 			getContext().sendBroadcast(new Intent(Intent.CRAVEOS_NAVBAR_ACTION_MANAGEMENT_BUTTON));
 		} else {
 			if (v.getTag() != null) {
 				String key = (String)v.getTag();
 				
-				if (DEBUG)
-					Slog.d(TAG, "onClick - Key: " + key);
+				Slog.v(TAG, "onClick - Key: " + key);
 				
 				ComponentContainer container = mComponentMap.get(key);
 				if (container.action.length() > 0) {
@@ -186,7 +193,9 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		if (mComponentMap.containsKey(key)) {
 			ComponentContainer component = mComponentMap.get(key);
 			
-			if (component.view != null) {
+			if (component.subView != null) {
+				component.subView.setEnabled(isEnabled);
+			} else if (component.view != null) {
 				component.view.setEnabled(isEnabled);
 			}
 		}
@@ -248,19 +257,26 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 			return;
 		}
 		
-		LinearLayout view = createContainer(key, craveContainer.getMarginLeft(), craveContainer.getMarginRight(), position);
+		LinearLayout view = createContainer(craveContainer.getMarginLeft(), craveContainer.getMarginRight(), position);
+		View subView = null;
 		if (type == TYPE_ICON) {
-			view.addView(createIcon(icon));
+			subView = createIcon(icon);
 		} else if (type == TYPE_BUTTON) {			
-			view.addView(createButton(text));
+			subView = createButton(text);
 		} else if (type == TYPE_TEXT) {
-			view.addView(createTextView(text, craveContainer.getTextColor(), craveContainer.getTextSize()));
-		} else {
+			subView = createTextView(text, craveContainer.getTextColor(), craveContainer.getTextSize());
+		} 
+		
+		if (subView == null) {
 			Slog.w(TAG, "Unknown type ("+type+") for key " + key);
 			return;
 		}
 		
-		Slog.v(TAG, "Added new component (key=" + key + 
+		subView.setTag(key);
+		subView.setEnabled(craveContainer.getEnabled());
+		view.addView(subView);
+		
+		Slog.i(TAG, "Added new component (key=" + key + 
 				", type=" + type +
 				", text=" + text + 
 				", icon=" + ((icon == null) ? "null" : "available") + 
@@ -269,13 +285,14 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 				", craveContainer=" + craveContainer.toString() + ")");
 				
 		ComponentContainer container = new ComponentContainer(view, position);
+		container.subView = subView;
 		container.isCustom = isCustom;
 		container.type = type;
-		container.view.setEnabled(craveContainer.getEnabled());
 		container.view.setVisibility(craveContainer.getVisibility());
 		
+		// Add OnClickListener to subview
 		if (action.length() > 0) {
-			container.view.setOnClickListener(this);
+			container.subView.setOnClickListener(this);
 			container.action = action;
 		}
 		
@@ -303,9 +320,9 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 			layout.removeAllViews();
 			layout.addView(createIcon(icon));
 		} else if (container.type == TYPE_BUTTON && text.length() > 0) {
-			((Button)layout.getChildAt(0)).setText(text);
+			((Button)container.subView).setText(text);
 		} else if (container.type == TYPE_TEXT && text.length() > 0) {
-			((TextView)layout.getChildAt(0)).setText(text);
+			((TextView)container.subView).setText(text);
 		}
 	}
 	
@@ -361,9 +378,8 @@ public class CraveStatusBarView extends FrameLayout implements NavigationBarCall
 		return tv;
 	}
 	
-	private LinearLayout createContainer(String key, int paddingLeft, int paddingRight, int position) {
+	private LinearLayout createContainer(int paddingLeft, int paddingRight, int position) {
 		LinearLayout v = new LinearLayout(getContext());
-		v.setTag(key);
 		v.setOrientation(LinearLayout.HORIZONTAL);		
 		v.setPadding(paddingLeft, 0, paddingRight, 0);
 		

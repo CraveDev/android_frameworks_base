@@ -237,15 +237,21 @@ public class CraveStatusBar extends BaseStatusBar {
 	}
 	
     @Override
-    public void showHideStatusBar(boolean hide) {
+    public synchronized void showHideStatusBar(boolean hide) {
     	if (mIsHidden != hide) {
     		super.showHideStatusBar(hide);
 	    	
 	    	if (mCraveStatusBarView != null) {
-	    		if (hide) {
-	    			mWindowManager.removeView(mCraveStatusBarView);
-	    		} else {
-	    			mWindowManager.addView(mCraveStatusBarView, getNavigationBarLayoutParams());
+	    		try {
+		    		if (hide) {
+		    			mWindowManager.removeView(mCraveStatusBarView);
+		    		} else {
+		    			mWindowManager.addView(mCraveStatusBarView, getNavigationBarLayoutParams());
+		    			mCraveStatusBarView.updateDefaultComponents();
+		    		}
+	    		} catch(RuntimeException ex) {
+	    			Slog.e(TAG, "Exception in showHideStatusBar: " + ex.getMessage());
+	    			mIsHidden = !hide;
 	    		}
 	    	}
     	}

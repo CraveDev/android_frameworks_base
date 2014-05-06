@@ -31,6 +31,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.IPackageDeleteObserver;
 import android.content.pm.IPackageInstallObserver;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -56,7 +57,9 @@ import android.util.Slog;
 import android.view.IWindowManager;
 import android.view.KeyEvent;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -221,6 +224,17 @@ public class Watchdog extends Thread {
 		        		new CraveInstallPackageObserver(), 
 		        		PackageManager.INSTALL_REPLACE_EXISTING | PackageManager.INSTALL_FROM_ADB, 
 		        		null);
+			} else if (action.equals(Intent.CRAVEOS_ACTION_REMOVE_APK)) {
+				if (!intent.hasExtra(Intent.CRAVEOS_EXTRA_APK_PACKAGE_NAME)) {
+					Slog.w(TAG, "Install APK: Missing packageName extra");
+					return;
+				}
+				
+				String fileStr = intent.getStringExtra(Intent.CRAVEOS_EXTRA_APK_PACKAGE_NAME);
+				Slog.v(TAG, "Removing APK: " + fileStr);
+				
+				PackageManager pm = mContext.getPackageManager();
+				pm.deletePackage(fileStr, new CraveDeletePackageObserver(), PackageManager.DELETE_ALL_USERS);
 			} else if (action.equals(Intent.CRAVEOS_ACTION_SET_DATETIME)) {
 				setDeviceDateTime(intent);
 			} else if (action.equals(Intent.CRAVEOS_ACTION_ADB_ENABLE)) {
@@ -264,11 +278,84 @@ public class Watchdog extends Thread {
 			Slog.i(TAG, "CraveInstallerPackageObserver - Install APK finished: packageName = " + packageName + ", returnCode = " + returnCode);
 			
 			Intent intent = new Intent(Intent.CRAVEOS_ACTION_INSTALL_APK_RESULT);
-			intent.putExtra(Intent.CRAVEOS_EXTRA_INSTALL_APK_RETURN_CODE, returnCode);
-			intent.putExtra(Intent.CRAVEOS_EXTRA_INSTALL_APK_PACKAGE_NAME, packageName);
+			intent.putExtra(Intent.CRAVEOS_EXTRA_APK_RETURN_CODE, returnCode);
+			intent.putExtra(Intent.CRAVEOS_EXTRA_APK_PACKAGE_NAME, packageName);
 			mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
 		}
     }    
+    
+    final class CraveDeletePackageObserver implements IPackageDeleteObserver {
+		@Override
+		public IBinder asBinder() {
+			Slog.d(TAG, "CraveDeletePackageObserver - asBinder called!");
+			return null;
+		}
+
+		@Override
+		public void packageDeleted(String packageName, int returnCode)
+				throws RemoteException {
+			Slog.i(TAG, "CraveDeletePackageObserver - Delete APK finished: packageName = " + packageName + ", returnCode = " + returnCode);
+			
+			Intent intent = new Intent(Intent.CRAVEOS_ACTION_DELETE_APK_RESULT);
+			intent.putExtra(Intent.CRAVEOS_EXTRA_APK_RETURN_CODE, returnCode);
+			intent.putExtra(Intent.CRAVEOS_EXTRA_APK_PACKAGE_NAME, packageName);
+			mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
+		}
+    }
+    
+    final class CpuGovernorCheck implements Monitor {
+    	public static final String GOV_FILE = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor";
+    	static final String GOV_INTERACTIVE = "interactive";
+    	
+    	public void monitor() {
+    		String currentScalingGovernor = "";
+    		if (fileExists(GOV_FILE)) {
+    			currentScalingGovernor = fileReadOneLine(GOV_FILE);
+    		}
+    		
+    		if (!currentScalingGovernor.equals(GOV_INTERACTIVE)) {
+    			Slog.i(TAG, "Changed cpu scaling governor from '" + currentScalingGovernor + "' to 'interactive'");
+    			fileWriteOneLine(GOV_FILE, GOV_INTERACTIVE);
+    		}
+    	}
+    	
+    	public boolean fileExists(String filename) {
+            return new File(filename).exists();
+        }
+
+        public String fileReadOneLine(String fname) {
+            BufferedReader br;
+            String line = null;
+
+            try {
+                br = new BufferedReader(new FileReader(fname), 512);
+                try {
+                    line = br.readLine();
+                } finally {
+                    br.close();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "IO Exception when reading /sys/ file", e);
+            }
+            return line;
+        }
+
+        public boolean fileWriteOneLine(String fname, String value) {
+            try {
+                FileWriter fw = new FileWriter(fname);
+                try {
+                    fw.write(value);
+                } finally {
+                    fw.close();
+                }
+            } catch (IOException e) {
+                String Error = "Error writing to " + fname + ". Exception: ";
+                Log.e(TAG, Error, e);
+                return false;
+            }
+            return true;
+        }
+    }
 
     public interface Monitor {
         void monitor();
@@ -314,6 +401,7 @@ public class Watchdog extends Thread {
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_REBOOT);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SHUTDOWN);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_INSTALL_APK);
+        craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_REMOVE_APK);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_SET_DATETIME);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_ENABLE);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_ADB_DISABLE);
@@ -323,6 +411,12 @@ public class Watchdog extends Thread {
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_CLEAR_USERDATA);
         craveIntentFilter.addAction(Intent.CRAVEOS_ACTION_CLEAR_CACHE);
         context.registerReceiver(new CraveIntentReceiver(), craveIntentFilter);
+        
+        Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.INSTALL_NON_MARKET_APPS, 1);
+        Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.PACKAGE_VERIFIER_ENABLE, 0);
+        
+        // Add cpu scaling governor check to ensure governor is always set on interactive
+        addMonitor(new CpuGovernorCheck());
         
         mBootTime = System.currentTimeMillis();
     }
@@ -518,7 +612,7 @@ public class Watchdog extends Thread {
     		InputManager.getInstance().injectInputEvent(down, InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
     		
     		now = SystemClock.uptimeMillis();
-    		KeyEvent up = new KeyEvent(now+1, now+1, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_POWER, 0);
+    		KeyEvent up = new KeyEvent(now+1, now+1, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_POWER, 0, KeyEvent.META_FUNCTION_ON);
     		InputManager.getInstance().injectInputEvent(up, InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
         } catch (Exception doe) {
         	Slog.w(TAG, "Exception: " + doe.getMessage());

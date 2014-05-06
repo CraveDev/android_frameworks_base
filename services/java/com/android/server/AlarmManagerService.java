@@ -302,9 +302,8 @@ class AlarmManagerService extends IAlarmManager.Stub {
             synchronized (this) {
                 String current = SystemProperties.get(TIMEZONE_PROPERTY);
                 if (current == null || !current.equals(zone.getID())) {
-                    if (localLOGV) {
-                        Slog.v(TAG, "timezone changed: " + current + ", new=" + zone.getID());
-                    }
+                    Slog.i(TAG, "timezone changed: " + current + ", new=" + zone.getID());
+                    
                     timeZoneWasChanged = true;
                     SystemProperties.set(TIMEZONE_PROPERTY, zone.getID());
                 }
@@ -315,7 +314,7 @@ class AlarmManagerService extends IAlarmManager.Stub {
                 setKernelTimezone(mDescriptor, -(gmtOffset / 60000));
             }
 
-            TimeZone.setDefault(null);
+            TimeZone.setDefault(zone);
 
             if (timeZoneWasChanged) {
                 Intent intent = new Intent(Intent.ACTION_TIMEZONE_CHANGED);

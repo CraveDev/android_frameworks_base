@@ -99,6 +99,8 @@ public abstract class BaseStatusBar extends SystemUI implements
     protected static final int MSG_CLOSE_SEARCH_PANEL = 1025;
     protected static final int MSG_SHOW_INTRUDER = 1026;
     protected static final int MSG_HIDE_INTRUDER = 1027;
+    
+    protected static final int MSG_TOGGLE_STATUSBAR_VISIBILITY = 1337;
 
     protected static final boolean ENABLE_INTRUDERS = false;
 
@@ -180,7 +182,10 @@ public abstract class BaseStatusBar extends SystemUI implements
      */
     protected abstract void createAndAddWindows();
     
-    public void showHideStatusBar(boolean hide) {
+    public synchronized void showHideStatusBar(boolean hide) {
+    	if (hide == mIsHidden)
+    		return;
+    	
     	mIsHidden = hide;
     	
     	if (hide) {
@@ -382,13 +387,16 @@ public abstract class BaseStatusBar extends SystemUI implements
 		mContext.registerReceiver(new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
-				String action = intent.getAction();
+		    	String action = intent.getAction();
 				Slog.v(TAG, "Received intent: " + action);
-				if (action.equals(Intent.CRAVEOS_ACTION_STATUSBAR_SHOW)) {
-					showHideStatusBar(false);
-				} else {
-					showHideStatusBar(true);
-				}
+				
+				int what = MSG_TOGGLE_STATUSBAR_VISIBILITY;
+		    	mHandler.removeMessages(what);
+				
+		    	Message message = new Message();
+		    	message.what = what;
+				message.arg1 = action.equals(Intent.CRAVEOS_ACTION_STATUSBAR_SHOW) ? 0 : 1;	    	
+		        mHandler.sendMessage(message);
 			}
 		}, filter);        
     }
@@ -786,6 +794,9 @@ public abstract class BaseStatusBar extends SystemUI implements
                      mSearchPanelView.show(false, true);
                  }
                  break;
+             case MSG_TOGGLE_STATUSBAR_VISIBILITY:
+            	 showHideStatusBar((m.arg1 == 1));
+            	 break;
             }
         }
     }
