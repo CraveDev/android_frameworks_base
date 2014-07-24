@@ -19,6 +19,7 @@ package android.content;
 
 import android.content.pm.ApplicationInfo;
 import android.util.ArraySet;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -600,6 +601,79 @@ import java.util.Set;
  * of all possible flags.
  */
 public class Intent implements Parcelable, Cloneable {
+	// ---------------------------------------------------------------------
+    // ---------------------------------------------------------------------
+    // CraveOS intents
+	
+	public static final String CRAVEOS_ACTION_SET_BACKLIGHT = "android.crave.intent.SET_BACKLIGHT";
+	public static final String CRAVEOS_ACTION_TURN_SCREEN_ONOFF = "android.crave.intent.TURN_SCREEN_ONOFF";
+	
+	public static final String CRAVEOS_SETTING_CAN_TURN_SCREEN_OFF = "android.crave.setting.CAN_TURN_SCREEN_OFF";
+	
+	public static final String CRAVEOS_ACTION_REBOOT = "android.crave.intent.REBOOT";
+	public static final String CRAVEOS_ACTION_SHUTDOWN = "android.crave.intent.SHUTDOWN";
+	public static final String CRAVEOS_ACTION_STATUSBAR_SHOW = "com.samsung.kiosk.StatusBarVisible";
+	public static final String CRAVEOS_ACTION_STATUSBAR_HIDE = "com.samsung.kiosk.StatusBarInvisible";
+	public static final String CRAVEOS_ACTION_KIOSKMODE_START = "com.samsung.kiosk.START_KIOSK_MODE";
+	public static final String CRAVEOS_ACTION_KIOSKMODE_STOP = "com.samsung.kiosk.STOP_KIOSK_MODE";
+	
+	public static final String CRAVEOS_ACTION_KIOSKMODE_HOME = "com.samsung.kiosk.SET_KIOSK_HOME";
+	public static final String CRAEVOS_EXTRA_KIOSKMODE_HOME_PACKAGE = "com.samsung.kiosk.homePackage";
+	
+	public static final String CRAVEOS_ACTION_CLEAR_USERDATA = "android.crave.intent.CLEAR_USERDATA";
+	public static final String CRAVEOS_ACTION_CLEAR_CACHE = "android.crave.intent.CLEAR_CACHE";
+	public static final String CRAVEOS_EXTRA_CLEAR_PACKAGENAME = "android.crave.intent.extra.PACKAGENAME";
+	
+	public static final String CRAVEOS_ACTION_SET_DATETIME = "com.samsung.kiosk.SET_TIME";
+	public static final String CRAVEOS_EXTRA_DATETIME_TIMESTAMP = "com.samsung.kiosk.timeMillis";
+	public static final String CRAVEOS_EXTRA_DATETIME_TIMEZONEID = "com.samsung.kiosk.timeZoneId";
+	public static final String CRAVEOS_EXTRA_DATETIME_24HOUR = "com.samsung.kiosk.is24Hour";
+	
+	public static final String CRAVEOS_ACTION_ADB_ENABLE = "com.samsung.kiosk.ENABLE_ADB";
+	public static final String CRAVEOS_ACTION_ADB_DISABLE = "com.samsung.kiosk.DISABLE_ADB";
+	public static final String CRAVEOS_ACTION_ADB_WIFI_ENABLE = "com.samsung.kiosk.ENABLE_ADB_WIFI";
+	public static final String CRAVEOS_ACTION_ADB_WIFI_DISABLE = "com.samsung.kiosk.DISABLE_ADB_WIFI";
+	
+	public static final String CRAVEOS_ACTION_INSTALL_APK = "com.samsung.kiosk.InstallPackage";
+	public static final String CRAVEOS_EXTRA_PACKAGE_PATH = "com.samsung.kiosk.PackagePath";
+	public static final String CRAVEOS_ACTION_INSTALL_APK_RESULT = "com.samsung.kiosk.InstallPackageResult";
+	public static final String CRAVEOS_EXTRA_APK_RETURN_CODE = "returnCode";
+	public static final String CRAVEOS_EXTRA_APK_PACKAGE_NAME = "packageName";
+	public static final String CRAVEOS_ACTION_REMOVE_APK = "android.crave.intent.RemovePackage";
+	public static final String CRAVEOS_ACTION_DELETE_APK_RESULT = "android.crave.intent.DeletePackageResult";
+	
+	public static final String CRAVEOS_ACTION_BATTERY_LOW = "android.crave.intent.BATTERY_LOW";
+	public static final String CRAVEOS_ACTION_INVALID_CHARGER = "android.crave.intent.INVALID_CHARGER";
+	public static final String CRAVEOS_ACTION_BATTERY_OK = "android.crave.intent.BATTERY_OK";
+	public static final String CRAVEOS_EXTRA_BATTERY_LEVEL = "android.crave.intent.extra.BATTERY_LEVEL";
+	
+	public static final String CRAVEOS_ACTION_POWER_SHORT_PRESS = "android.crave.intent.POWER_SHORT_PRESS";
+	public static final String CRAVEOS_ACTION_POWER_LONG_PRESS = "android.crave.intent.POWER_LONG_PRESS";
+	
+	public static final String CRAVEOS_ACTION_SET_LOCALE = "android.crave.intent.SET_LOCALE";
+	public static final String CRAVEOS_EXTRA_SET_LOCALE = "locale";
+	
+	public static final String CRAVEOS_NAVBAR_ACTION_MANAGEMENT_BUTTON = "android.crave.intent.navbar.MANAGEMENT_BUTTON";
+	
+	public static final String CRAVEOS_NAVBAR_ACTION_ADD = "android.crave.intent.navbar.ADD_BUTTON";
+	public static final String CRAVEOS_NAVBAR_ACTION_REMOVE = "android.crave.intent.navbar.REMOVE";
+	public static final String CRAVEOS_NAVBAR_ACTION_UPDATE = "android.crave.intent.navbar.UPDATE";
+	public static final String CRAVEOS_NAVBAR_ACTION_CLEAR = "android.crave.intent.navbar.CLEAR";
+	public static final String CRAVEOS_NAVBAR_ACTION_RESET = "android.crave.intent.navbar.RESET";
+	public static final String CRAVEOS_NAVBAR_ACTION_SET_VISIBILITY = "android.crave.intent.navbar.SET_VISIBILITY";
+	public static final String CRAVEOS_NAVBAR_ACTION_SET_ENABLED = "android.crave.intent.navbar.SET_ENABLED";
+	
+	public static final String CRAVEOS_NAVBAR_EXTRA_SIDE = "android.crave.intent.navbar.extra.SIDE";
+	public static final String CRAVEOS_NAVBAR_EXTRA_KEY	= "android.crave.intent.navbar.extra.KEY";
+	public static final String CRAVEOS_NAVBAR_EXTRA_ADD_ICON = "android.crave.intent.navbar.extra.ADD_ICON";
+	public static final String CRAVEOS_NAVBAR_EXTRA_ADD_TEXT = "android.crave.intent.navbar.extra.ADD_TEXT";
+	public static final String CRAVEOS_NAVBAR_EXTRA_ADD_ACTION = "android.crave.intent.navbar.extra.ADD_ACTION";
+	public static final String CRAVEOS_NAVBAR_EXTRA_VISIBILITY = "android.crave.intent.navbar.extra.VISIBILITY";
+	public static final String CRAVEOS_NAVBAR_EXTRA_ENABLED = "android.crave.intent.navbar.extra.ENABLED";
+	public static final String CRAVEOS_NAVBAR_EXTRA_TYPE = "android.crave.intent.navbar.extra.TYPE";
+	public static final String CRAVEOS_NAVBAR_EXTRA_PADDING = "android.crave.intent.navbar.extra.PADDING";
+	public static final String CRAVEOS_NAVBAR_EXTRA_CONTAINER = "android.crave.intent.navbar.extra.CONTAINER";
+	
     // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
     // Standard intent activity actions (see action variable).
