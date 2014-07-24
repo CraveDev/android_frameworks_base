@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<com.android.systemui.statusbar.crave.CraveStatusBarView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:systemui="http://schemas.android.com/apk/res/com.android.systemui"
+    >
+    
+      <RelativeLayout
+            android:id="@+id/bar_contents"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:layout_gravity="bottom"
+        	android:background="@drawable/footer_bg">
+            
+            <LinearLayout 
+            	android:id="@+id/centerArea"
+            	android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                
+                <ImageView
+			        android:id="@+id/managementButton"
+			        android:src="@drawable/crave_signature"
+			        android:layout_width="126px"
+			        android:layout_height="50px" />
+                
+			</LinearLayout>
+    		
+          	<LinearLayout
+                android:id="@+id/leftArea"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_gravity="left"
+                android:gravity="center_vertical">
+                
+				<com.android.systemui.statusbar.policy.KeyButtonView
+		            android:id="@+id/one"
+		            android:layout_height="wrap_content"
+		            android:layout_width="wrap_content"
+		            systemui:keyRepeat="true" />
+		        <com.android.systemui.statusbar.policy.KeyButtonView
+		            android:id="@+id/two"
+		            android:layout_height="wrap_content"
+		            android:layout_width="wrap_content"
+		            systemui:keyRepeat="true" />
+          	    
+            </LinearLayout>
+                
+			<LinearLayout
+                android:id="@+id/rightArea"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true" 
+                android:orientation="horizontal"
+                android:layout_gravity="right"
+                android:gravity="center_vertical">
+
+			    <View 
+			        android:layout_width="10dip"
+			        android:layout_height="match_parent" />
+
+			    <com.android.systemui.statusbar.crave.CraveBattery
+                    android:id="@+id/craveBattery"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical|left"
+                    android:paddingRight="15dip"
+                    />
+			    <com.android.systemui.statusbar.crave.CraveClock
+	                android:id="@+id/craveClock"
+	                android:layout_width="wrap_content"
+	                android:layout_height="match_parent"
+	                android:singleLine="true"
+	                android:paddingRight="15dip"
+	                android:gravity="center_vertical|left"
+	                />
+
+            </LinearLayout>     
+
+        </RelativeLayout>
+
+ </com.android.systemui.statusbar.crave.CraveStatusBarView>
