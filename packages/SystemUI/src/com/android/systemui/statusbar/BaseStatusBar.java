@@ -1317,4 +1317,18 @@ public abstract class BaseStatusBar extends SystemUI implements
         }
         mContext.unregisterReceiver(mBroadcastReceiver);
     }
+    
+    protected boolean mIsHidden = false;
+    public synchronized void showHideStatusBar(boolean hide) {
+    	if (hide == mIsHidden)
+    		return;
+    	
+    	mIsHidden = hide;
+    	
+    	if (hide) {
+    		mStatusBarContainer.setVisibility(View.GONE);
+    	} else {
+    		mStatusBarContainer.setVisibility(View.VISIBLE);
+    	}
+    }
 }
