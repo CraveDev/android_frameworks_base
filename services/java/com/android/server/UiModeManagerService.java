@@ -303,7 +303,7 @@ final class UiModeManagerService extends IUiModeManager.Stub {
             case Intent.EXTRA_DOCK_STATE_DESK:
             case Intent.EXTRA_DOCK_STATE_LE_DESK:
             case Intent.EXTRA_DOCK_STATE_HE_DESK:
-                return true;
+                return false;
             default:
                 return false;
         }

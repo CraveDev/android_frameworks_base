@@ -106,18 +106,10 @@ public final class Sandman {
     }
 
     private static boolean isScreenSaverEnabled(Context context) {
-        int def = context.getResources().getBoolean(
-                com.android.internal.R.bool.config_dreamsEnabledByDefault) ? 1 : 0;
-        return Settings.Secure.getIntForUser(context.getContentResolver(),
-                Settings.Secure.SCREENSAVER_ENABLED, def,
-                UserHandle.USER_CURRENT) != 0;
+        return false;
     }
 
     private static boolean isScreenSaverActivatedOnDock(Context context) {
-        int def = context.getResources().getBoolean(
-                com.android.internal.R.bool.config_dreamsActivatedOnDockByDefault) ? 1 : 0;
-        return Settings.Secure.getIntForUser(context.getContentResolver(),
-                Settings.Secure.SCREENSAVER_ACTIVATE_ON_DOCK, def,
-                UserHandle.USER_CURRENT) != 0;
+        return false;
     }
 }
