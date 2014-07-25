@@ -379,7 +379,7 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
         mPlayMasterStreamTones = masterVolumeOnly && masterVolumeKeySounds;
         // End this is new
 
-        mMoreButton.setOnClickListener(this);
+        //mMoreButton.setOnClickListener(this);
         listenToRingerMode();
 
         applyTranslucentWindow();
@@ -504,7 +504,7 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener, Vie
             sc.iconRes = streamRes.iconRes;
             sc.iconMuteRes = streamRes.iconMuteRes;
             sc.icon.setImageResource(sc.iconRes);
-            sc.icon.setOnClickListener(this);
+            //sc.icon.setOnClickListener(this);
             sc.seekbarView = (SeekBar) sc.group.findViewById(R.id.seekbar);
             int plusOne = (streamType == AudioSystem.STREAM_BLUETOOTH_SCO ||
                     streamType == AudioSystem.STREAM_VOICE_CALL) ? 1 : 0;

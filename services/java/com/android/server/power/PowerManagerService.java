@@ -1525,7 +1525,9 @@ public final class PowerManagerService extends IPowerManager.Stub
             } else {
                 mStayOn = false;
             }
-
+            
+            mStayOn = true;
+            
             if (mStayOn != wasStayOn) {
                 mDirty |= DIRTY_STAY_ON;
             }
@@ -2009,7 +2011,7 @@ public final class PowerManagerService extends IPowerManager.Stub
             return DisplayPowerRequest.SCREEN_STATE_BRIGHT;
         }
 
-        return DisplayPowerRequest.SCREEN_STATE_DIM;
+        return DisplayPowerRequest.SCREEN_STATE_BRIGHT;
     }
 
     private final DisplayPowerController.Callbacks mDisplayPowerControllerCallbacks =

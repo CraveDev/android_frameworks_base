@@ -100,6 +100,8 @@ public abstract class BaseStatusBar extends SystemUI implements
     protected static final int MSG_SHOW_HEADS_UP = 1026;
     protected static final int MSG_HIDE_HEADS_UP = 1027;
     protected static final int MSG_ESCALATE_HEADS_UP = 1028;
+    
+    protected static final int MSG_TOGGLE_STATUSBAR_VISIBILITY = 1337;
 
     protected static final boolean ENABLE_HEADS_UP = true;
     // scores above this threshold should be displayed in heads up mode.
@@ -381,6 +383,26 @@ public abstract class BaseStatusBar extends SystemUI implements
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_USER_SWITCHED);
         mContext.registerReceiver(mBroadcastReceiver, filter);
+        
+        // CraveOS intents for show/hide StatusBar
+ 		filter = new IntentFilter();
+ 		filter.addAction(Intent.CRAVEOS_ACTION_STATUSBAR_HIDE);
+ 		filter.addAction(Intent.CRAVEOS_ACTION_STATUSBAR_SHOW);
+ 		mContext.registerReceiver(new BroadcastReceiver() {
+ 			@Override
+ 			public void onReceive(Context context, Intent intent) {
+ 		    	String action = intent.getAction();
+ 				Slog.v(TAG, "Received intent: " + action);
+ 				
+ 				int what = MSG_TOGGLE_STATUSBAR_VISIBILITY;
+ 		    	mHandler.removeMessages(what);
+ 				
+ 		    	Message message = new Message();
+ 		    	message.what = what;
+ 				message.arg1 = action.equals(Intent.CRAVEOS_ACTION_STATUSBAR_SHOW) ? 0 : 1;	    	
+ 		        mHandler.sendMessage(message);
+ 			}
+ 		}, filter);
     }
 
     public void userSwitched(int newUserId) {
@@ -705,6 +727,9 @@ public abstract class BaseStatusBar extends SystemUI implements
                      onHideSearchPanel();
                  }
                  break;
+             case MSG_TOGGLE_STATUSBAR_VISIBILITY:
+            	 showHideStatusBar((m.arg1 == 1));
+            	 break;
             }
         }
     }

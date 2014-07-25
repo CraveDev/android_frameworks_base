@@ -379,7 +379,7 @@ public final class PowerManager {
      * @hide
      */
     public static boolean useScreenAutoBrightnessAdjustmentFeature() {
-        return true;
+        return false;
     }
 
     /**
@@ -388,7 +388,7 @@ public final class PowerManager {
      * @hide
      */
     public static boolean useTwilightAdjustmentFeature() {
-        return true;
+        return false;
     }
 
     /**

@@ -245,7 +245,7 @@ final class DisplayPowerController {
     // True if we should allow showing the screen-off animation
     private boolean useScreenOffAnimation() {
         return Settings.System.getInt(mContext.getContentResolver(),
-                Settings.System.SCREEN_OFF_ANIMATION, 1) == 1;
+        		Settings.System.SCREEN_OFF_ANIMATION, 1) == 1;
     }
 
     // The pending power request.

@@ -75,10 +75,10 @@ import com.android.internal.util.cm.DevUtils;
 import android.service.dreams.DreamService;
 import android.service.dreams.IDreamManager;
 import android.service.gesture.EdgeGestureManager;
+
 import com.android.internal.os.DeviceKeyHandler;
 
 import dalvik.system.DexClassLoader;
-
 import android.util.DisplayMetrics;
 import android.util.EventLog;
 import android.util.Log;
@@ -163,6 +163,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     static final int LONG_PRESS_POWER_GLOBAL_ACTIONS = 1;
     static final int LONG_PRESS_POWER_SHUT_OFF = 2;
     static final int LONG_PRESS_POWER_SHUT_OFF_NO_CONFIRM = 3;
+    static final int LONG_PRESS_POWER_CRAVE_INTENT = 4;
 
     static final int APPLICATION_MEDIA_SUBLAYER = -2;
     static final int APPLICATION_MEDIA_OVERLAY_SUBLAYER = -1;
@@ -376,6 +377,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private boolean mClearedBecauseOfForceShow;
     private boolean mShowSystemBarOnKeyguard;
     private boolean mWindowIsKeyguardWithBars;
+    
+    boolean mIsKioskMode = false;
+    boolean mCanTurnScreenOff = false;
+    String mKioskModeHome = "";
+    Intent mOldHomeIntent = null;
 
     private final class PointerLocationPointerEventListener implements PointerEventListener {
         @Override
@@ -1014,6 +1020,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     mWindowManagerFuncs.shutdown(resolvedBehavior == LONG_PRESS_POWER_SHUT_OFF);
                 }
                 break;
+            case LONG_PRESS_POWER_CRAVE_INTENT:
+	            mPowerKeyHandled = true;
+	            mContext.sendBroadcast(new Intent(Intent.CRAVEOS_ACTION_POWER_LONG_PRESS));
+	            break;                 
             }
         }
     };
@@ -1260,6 +1270,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 com.android.internal.R.integer.config_deviceHardwareKeys);
         mSingleStageCameraKey = mContext.getResources().getBoolean(
                 com.android.internal.R.bool.config_singleStageCameraKey);
+        mIsKioskMode = SystemProperties.getBoolean("CRAVE_KIOSKMODE", false);
 
         updateKeyAssignments();
 
@@ -1287,6 +1298,14 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         filter = new IntentFilter(Intent.ACTION_USER_SWITCHED);
         context.registerReceiver(mMultiuserReceiver, filter);
 
+		// register for crave kiosk mode broadcasts
+		filter = new IntentFilter();
+		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_START);
+		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP);
+		filter.addAction(Intent.CRAVEOS_ACTION_KIOSKMODE_HOME);
+		filter.addAction(Intent.CRAVEOS_SETTING_CAN_TURN_SCREEN_OFF);
+		context.registerReceiver(mCraveKioskModeReceiver, filter);
+		
         // monitor for system gestures
         mSystemGestures = new SystemGesturesPointerEventListener(context,
                 new SystemGesturesPointerEventListener.Callbacks() {
@@ -4889,6 +4908,17 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     return result;
                 }
                 result &= ~ACTION_PASS_TO_USER;
+                
+                // isFunctionPressed flag is set when TURN_SCREEN_OFF intent is received in Watchdog,
+            	// just so we know when the actual button is pressed and when the intent is used
+                if (mIsKioskMode && !mCanTurnScreenOff && !event.isFunctionPressed()) {
+                	if (isScreenOn && down) {
+            			mContext.sendBroadcastAsUser(new Intent(Intent.CRAVEOS_ACTION_POWER_SHORT_PRESS), UserHandle.ALL);
+            		}
+                	Slog.v(TAG, "Power pressed. Break");
+       				return result;
+                }
+                
                 if (down) {
                     if (isScreenOn && !mPowerKeyTriggered
                             && (event.getFlags() & KeyEvent.FLAG_FALLBACK) == 0) {
@@ -6496,4 +6526,41 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         mStatusBarController.dump(pw, prefix);
         mNavigationBarController.dump(pw, prefix);
     }
+    
+	BroadcastReceiver mCraveKioskModeReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			Slog.i(TAG, "CraveKioskModeReceiver: " + action);
+			if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_START)) {
+				mLongPressOnPowerBehavior = LONG_PRESS_POWER_CRAVE_INTENT;
+				mIsKioskMode = true;
+				SystemProperties.set("CRAVE_KIOSKMODE", String.valueOf(true));
+			} else if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_STOP)) {
+				mLongPressOnPowerBehavior = LONG_PRESS_POWER_GLOBAL_ACTIONS;
+				mIsKioskMode = false;
+				SystemProperties.set("CRAVE_KIOSKMODE", String.valueOf(false));
+				// Put HomeIntent back to the old one
+				if (mOldHomeIntent != null) {
+					mHomeIntent = mOldHomeIntent;
+					mOldHomeIntent = null;
+				}
+			} else if (action.equals(Intent.CRAVEOS_ACTION_KIOSKMODE_HOME)) {
+				mKioskModeHome = intent.getStringExtra(Intent.CRAEVOS_EXTRA_KIOSKMODE_HOME_PACKAGE);
+				if (mKioskModeHome == null) {
+					mKioskModeHome = "";
+				} else if (!mKioskModeHome.isEmpty()) {
+					if (mOldHomeIntent == null) {
+						mOldHomeIntent = mHomeIntent;
+					}
+					
+					mHomeIntent = new Intent(Intent.ACTION_MAIN);
+					mHomeIntent.setComponent(ComponentName.unflattenFromString(mKioskModeHome));
+					mHomeIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NEW_TASK);
+				}
+			} else if (action.equals(Intent.CRAVEOS_SETTING_CAN_TURN_SCREEN_OFF)) {
+				mCanTurnScreenOff = intent.getBooleanExtra("value", false);
+			}
+		}
+	};    
 }
