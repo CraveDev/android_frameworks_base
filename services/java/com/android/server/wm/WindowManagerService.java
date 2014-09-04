@@ -522,7 +522,7 @@ public class WindowManagerService extends IWindowManager.Stub
 
     boolean mHardKeyboardAvailable;
     boolean mHardKeyboardEnabled;
-    OnHardKeyboardStatusChangeListener mHardKeyboardStatusChangeListener;
+    ArrayList<OnHardKeyboardStatusChangeListener> mHardKeyboardStatusChangeListener;
 
     final ArrayList<WindowToken> mWallpaperTokens = new ArrayList<WindowToken>();
 
@@ -6914,6 +6914,7 @@ public class WindowManagerService extends IWindowManager.Stub
             if (!mForceDisableHardwareKeyboard) {
                 hardKeyboardAvailable = config.keyboard != Configuration.KEYBOARD_NOKEYS;
             }
+            Slog.v(TAG, "mHardKeyboardAvailable=" + mHardKeyboardAvailable + ", hardKeyboardAvailable=" + hardKeyboardAvailable);
             if (hardKeyboardAvailable != mHardKeyboardAvailable) {
                 mHardKeyboardAvailable = hardKeyboardAvailable;
                 mHardKeyboardEnabled = hardKeyboardAvailable;
@@ -6958,20 +6959,29 @@ public class WindowManagerService extends IWindowManager.Stub
     public void setOnHardKeyboardStatusChangeListener(
             OnHardKeyboardStatusChangeListener listener) {
         synchronized (mWindowMap) {
-            mHardKeyboardStatusChangeListener = listener;
+        	if (mHardKeyboardStatusChangeListener == null) {
+        		mHardKeyboardStatusChangeListener = new ArrayList<WindowManagerService.OnHardKeyboardStatusChangeListener>();
+        	}
+        	
+            mHardKeyboardStatusChangeListener.add(listener);
         }
     }
 
     void notifyHardKeyboardStatusChange() {
         final boolean available, enabled;
-        final OnHardKeyboardStatusChangeListener listener;
+        final ArrayList<OnHardKeyboardStatusChangeListener> listeners;
         synchronized (mWindowMap) {
-            listener = mHardKeyboardStatusChangeListener;
+            listeners = mHardKeyboardStatusChangeListener;
             available = mHardKeyboardAvailable;
             enabled = mHardKeyboardEnabled;
         }
-        if (listener != null) {
-            listener.onHardKeyboardStatusChange(available, enabled);
+
+        if (listeners != null && listeners.size() > 0) {
+        	for(OnHardKeyboardStatusChangeListener listener : listeners) {
+        		if (listener != null) {
+        			listener.onHardKeyboardStatusChange(available, enabled);
+        		}
+        	}
         }
     }
 

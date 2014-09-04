@@ -145,7 +145,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     static final boolean DEBUG = false;
     static final boolean localLOGV = false;
     static final boolean DEBUG_LAYOUT = false;
-    static final boolean DEBUG_INPUT = false;
+    static final boolean DEBUG_INPUT = true;
     static final boolean DEBUG_STARTING_WINDOW = false;
     static final boolean SHOW_STARTING_ANIMATIONS = true;
     static final boolean SHOW_PROCESSES_ON_ALT_MENU = false;
@@ -2657,7 +2657,16 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 }
             }
             return -1;
-        } else if (keyCode == KeyEvent.KEYCODE_MENU) {
+        } 
+
+        if (mIsKioskMode)
+        {
+        	// We're running in KioskMode, so we can skip the rest of the buttons
+        	// Let the application handle the key.
+        	return 0;
+        }
+        
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
             // Hijack modified menu keys for debugging features
             final int chordBug = KeyEvent.META_SHIFT_ON;
 
@@ -2841,7 +2850,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             }
             return -1;
         }
-
+        
         // Shortcuts are invoked through Search+key, so intercept those here
         // Any printing key that is chorded with Search should be consumed
         // even if no shortcut was invoked.  This prevents text from being
@@ -2946,10 +2955,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             return -1;
         }
 
-        if (mGlobalKeyManager.handleGlobalKey(mContext, keyCode, event)) {
-            return -1;
-
-        }
+	    if (mGlobalKeyManager.handleGlobalKey(mContext, keyCode, event)) {
+	        return -1;
+	
+	    }
 
         // Let the application handle the key.
         return 0;
@@ -4712,6 +4721,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         // Handle special keys.
         switch (keyCode) {
             case KeyEvent.KEYCODE_ENDCALL: {
+            	if (mIsKioskMode) {
+            		result &= ~ACTION_PASS_TO_USER;
+            		break;
+            	}
+            	
                 result &= ~ACTION_PASS_TO_USER;
                 if (down) {
                     ITelephony telephonyService = getTelephonyService();
@@ -4749,6 +4763,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 }
                 break;
             case KeyEvent.KEYCODE_FOCUS:
+            	if (mIsKioskMode) {
+            		result &= ~ACTION_PASS_TO_USER;
+            		break;
+            	}
+            	
                 if (down && !isScreenOn && mCameraWakeScreen) {
                     if ((keyCode != KeyEvent.KEYCODE_VOLUME_UP) && (keyCode != KeyEvent.KEYCODE_VOLUME_DOWN)) {
                         result |= ACTION_WAKE_UP;
@@ -4762,6 +4781,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 }
                 break;
             case KeyEvent.KEYCODE_CAMERA:
+            	if (mIsKioskMode) {
+            		result &= ~ACTION_PASS_TO_USER;
+            		break;
+            	}
+            	
                 if (down && mIsFocusPressed) {
                     mIsFocusPressed = false;
                 }
@@ -4968,6 +4992,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             case KeyEvent.KEYCODE_MEDIA_PLAY:
             case KeyEvent.KEYCODE_MEDIA_PAUSE:
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            	if (mIsKioskMode) {
+            		result &= ~ACTION_PASS_TO_USER;
+            		break;
+            	}
+            	
                 if (down) {
                     ITelephony telephonyService = getTelephonyService();
                     if (telephonyService != null) {
@@ -4991,6 +5020,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             case KeyEvent.KEYCODE_MEDIA_RECORD:
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
             case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK: {
+            	if (mIsKioskMode) {
+            		result &= ~ACTION_PASS_TO_USER;
+            		break;
+            	}
+            	
                 if ((result & ACTION_PASS_TO_USER) == 0) {
                     // Only do this if we would otherwise not pass it to the user. In that
                     // case, the PhoneWindow class will do the same thing, except it will
@@ -5007,6 +5041,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             }
 
             case KeyEvent.KEYCODE_CALL: {
+            	if (mIsKioskMode) {
+            		result &= ~ACTION_PASS_TO_USER;
+            		break;
+            	}
+            	
                 if (down) {
                     ITelephony telephonyService = getTelephonyService();
                     if (telephonyService != null) {

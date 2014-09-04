@@ -7,6 +7,7 @@ import java.util.Set;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -34,11 +35,12 @@ public class CraveStatusBarView extends FrameLayout implements View.OnClickListe
 	private static final String TAG = "CraveStatusBarView";
 	private static final boolean DEBUG = BaseStatusBar.DEBUG;
 	
-	private static final String HOME_STRING = "sys_home";
-    private static final String BACK_STRING = "sys_back";
-    private static final String CLOCK_STRING = "sys_clock";
-    private static final String BATTERY_STRING = "sys_battery";
-    private static final String MANAGEMENT_STRING = "sys_management";
+	public static final String HOME_STRING = "sys_home";
+	public static final String BACK_STRING = "sys_back";
+	public static final String CLOCK_STRING = "sys_clock";
+	public static final String BATTERY_STRING = "sys_battery";
+	public static final String HARD_KEYBOARD_STRING = "sys_hardware_keyboard";
+	public static final String MANAGEMENT_STRING = "sys_management";
     
     private static final int TYPE_ICON = 1;
     private static final int TYPE_BUTTON = 2;
@@ -136,7 +138,16 @@ public class CraveStatusBarView extends FrameLayout implements View.OnClickListe
         container = new ComponentContainer(sysBattery, POSITION_RIGHT);
 		container.isCustom = false;
 		mComponentMap.put(BATTERY_STRING, container); 
-        
+		
+		/*ImageView hardwareKeyboard = (ImageView)findViewById(R.id.hardwareKeyboard);
+		container = new ComponentContainer(hardwareKeyboard, POSITION_RIGHT);
+		container.isCustom = false;
+		mComponentMap.put(HARD_KEYBOARD_STRING, container);
+		
+		if(getContext().getResources().getConfiguration().keyboard != Configuration.KEYBOARD_NOKEYS)
+			toggleComponentVisibility(HARD_KEYBOARD_STRING, View.VISIBLE);
+		else
+			toggleComponentVisibility(HARD_KEYBOARD_STRING, View.GONE);*/
 	}
 	
 	public void updateDefaultComponents()
@@ -153,12 +164,18 @@ public class CraveStatusBarView extends FrameLayout implements View.OnClickListe
 		} else {
 			if (v.getTag() != null) {
 				String key = (String)v.getTag();
-				
-				Slog.v(TAG, "onClick - Key: " + key);
-				
 				ComponentContainer container = mComponentMap.get(key);
-				if (container.action.length() > 0) {
-					mContext.sendBroadcast(new Intent(container.action));
+				if (container != null)
+				{
+					Slog.v(TAG, "onClick - intent=" + container.action);
+									
+					if (container.action.length() > 0) {
+						mContext.sendBroadcast(new Intent(container.action));
+					}
+				}
+				else
+				{
+					Slog.w(TAG, "No container found for tag: " + key);
 				}
 			}
 		}

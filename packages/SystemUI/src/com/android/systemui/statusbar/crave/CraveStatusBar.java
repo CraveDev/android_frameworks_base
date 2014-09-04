@@ -116,7 +116,9 @@ public class CraveStatusBar extends BaseStatusBar {
 
 	@Override
 	public void setHardKeyboardStatus(boolean available, boolean enabled) {
-		
+		//Slog.d(TAG, "setHardKeyboardStatus. available=" + available + ", enabled=" + enabled);
+		//int visibility = enabled ? View.VISIBLE : View.GONE;
+		//mCraveStatusBarView.toggleComponentVisibility(CraveStatusBarView.HARD_KEYBOARD_STRING, visibility);
 	}
 
 	@Override
